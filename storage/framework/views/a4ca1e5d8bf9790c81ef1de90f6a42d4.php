@@ -1,0 +1,1998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
+    <title>Student Clearance System | TCC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <style>
+    /* RESET & BASE */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    body, html {
+        min-height: 100vh;
+        width: 100%;
+    }
+    
+    /* DESKTOP: Main background image sa buong page */
+    @media (min-width: 769px) {
+        body {
+            background-image: url('/images/logindesk.png') !important;
+            background-size: cover !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            background-attachment: fixed !important;
+        }
+    }
+    
+    /* MOBILE: Main background image sa buong page */
+    @media (max-width: 768px) {
+        body {
+            background-image: url('/images/login.png') !important;
+            background-size: cover !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            background-attachment: fixed !important;
+        }
+    }
+    
+    .hero-bg {
+        position: relative;
+        min-height: 100vh;
+    }
+    
+    .hero-bg::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%);
+        pointer-events: none;
+    }
+    
+    /* Side Panel - Base style */
+    .side-panel {
+        position: fixed;
+        top: 0;
+        right: -500px;
+        width: 500px;
+        height: 100%;
+        background-color: rgba(10, 15, 26, 0.95);
+        backdrop-filter: blur(10px);
+        box-shadow: -5px 0 30px rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        transition: right 0.3s ease-in-out;
+        overflow-y: auto;
+        border-left: 1px solid rgba(59, 130, 246, 0.2);
+    }
+    
+    .side-panel.open {
+        right: 0;
+    }
+    
+    @media (max-width: 768px) {
+        .side-panel {
+            width: 100%;
+            right: -100%;
+        }
+    }
+    
+    /* Panel contents - may background para basahin ang text */
+    #loginPanel .p-6,
+    #registerPanel .p-6,
+    #forgotPanel .p-6,
+    #otpPanel .p-6,
+    #resetPanel .p-6,
+    #bugReportPanel .p-6,
+    #emailVerifyPanel .p-6,
+    #newEmailVerifyPanel .p-6 {
+        background-color: rgba(10, 15, 26, 0.85);
+        backdrop-filter: blur(10px);
+        border-radius: 24px;
+        margin: 16px;
+        height: calc(100% - 32px);
+        overflow-y: auto;
+    }
+    
+    /* Login panel special - transparent */
+    #loginPanel {
+        background-color: #080818 !important;
+        backdrop-filter: none !important;
+    }
+    
+    /* Iba pang panels */
+    #registerPanel, #forgotPanel, #otpPanel, #resetPanel, #bugReportPanel, 
+    #emailVerifyPanel, #newEmailVerifyPanel {
+        background-color: rgba(10, 15, 26, 0.95) !important;
+        backdrop-filter: blur(10px);
+    }
+    
+    /* Form Styles */
+    .panel-input {
+        width: 100%;
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 10px;
+        font-size: 14px;
+        color: #e2e8f0;
+        transition: all 0.3s;
+    }
+    
+    .panel-input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        background: rgba(255, 255, 255, 0.12);
+    }
+    
+    .panel-input::placeholder {
+        color: rgba(226, 232, 240, 0.4);
+    }
+    
+    /* Login panel inputs - mas madilim para kita */
+    #loginPanel .panel-input,
+    #loginPanel .panel-select,
+    #loginPanel .bg-white\/10,
+    #loginPanel [class*="bg-white"] {
+        background: rgba(0, 0, 0, 0.6) !important;
+        backdrop-filter: blur(4px);
+        border-color: rgba(59, 130, 246, 0.4);
+    }
+    
+    .panel-select {
+        width: 100%;
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 10px;
+        font-size: 14px;
+        color: #e2e8f0;
+    }
+    
+    .panel-select option {
+        background: #0f2a3f;
+        color: #e2e8f0;
+    }
+    
+    .panel-label {
+        display: block;
+        color: #94a3b8;
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+    
+    .panel-subtitle {
+        color: #94a3b8;
+    }
+    
+    .panel-text {
+        color: #cbd5e1;
+    }
+    
+    .panel-link {
+        color: #60a5fa;
+    }
+    
+    .panel-link:hover {
+        color: #93c5fd;
+    }
+    
+    .panel-close {
+        color: #94a3b8;
+        transition: color 0.2s;
+        cursor: pointer;
+        font-size: 28px;
+        line-height: 1;
+    }
+    
+    .panel-close:hover {
+        color: white;
+    }
+    
+    .panel-divider {
+        border-top-color: rgba(59, 130, 246, 0.2);
+    }
+    
+    /* Buttons */
+    .btn-primary {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+    }
+    
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .report-btn {
+        background: rgba(239, 68, 68, 0.2);
+        border: 1px solid rgba(239, 68, 68, 0.4);
+        transition: all 0.3s ease;
+    }
+    
+    .report-btn:hover {
+        background: rgba(239, 68, 68, 0.4);
+        transform: translateY(-2px);
+    }
+    
+    .step-circle {
+        width: 56px;
+        height: 56px;
+        background: rgba(59, 130, 246, 0.25);
+        border: 2px solid #60a5fa;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem auto;
+    }
+    
+    .step-circle span {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #60a5fa;
+    }
+    
+    /* Toast Notifications */
+    .toast-notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 10000;
+        min-width: 300px;
+        animation: slideInRight 0.3s ease-out;
+        backdrop-filter: blur(10px);
+        border-radius: 12px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+    
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    .toast-success {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.95), rgba(5, 150, 105, 0.95));
+        border-left: 4px solid #10b981;
+        color: white;
+    }
+    
+    .toast-error {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.95), rgba(220, 38, 38, 0.95));
+        border-left: 4px solid #ef4444;
+        color: white;
+    }
+    
+    .toast-info {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.95), rgba(37, 99, 235, 0.95));
+        border-left: 4px solid #3b82f6;
+        color: white;
+    }
+    
+    /* Loading Overlay */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(4px);
+        z-index: 10001;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .loading-spinner {
+        background: linear-gradient(135deg, #0a0f1a, #0f2a3f);
+        border-radius: 20px;
+        padding: 30px 40px;
+        text-align: center;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+    
+    .loading-spinner .spinner {
+        width: 50px;
+        height: 50px;
+        border: 3px solid rgba(59, 130, 246, 0.3);
+        border-top-color: #3b82f6;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin: 0 auto 15px;
+    }
+    
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+    
+    /* OTP Input */
+    .otp-digit, .new-otp-digit {
+        width: 60px;
+        height: 60px;
+        text-align: center;
+        font-size: 24px;
+        font-weight: bold;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(168, 85, 247, 0.3);
+        border-radius: 12px;
+        color: white;
+    }
+    
+    .otp-digit:focus, .new-otp-digit:focus {
+        outline: none;
+        border-color: #a855f7;
+        box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.3);
+    }
+    
+    /* Tabs */
+    .sliding-indicator {
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        height: 2px;
+        background: linear-gradient(90deg, #a855f7, #d8b4fe);
+        transition: all 0.3s;
+        border-radius: 2px;
+    }
+    
+    .forgot-tabs-container {
+        position: relative;
+    }
+    
+    .tab-button {
+        transition: all 0.3s ease;
+        cursor: pointer;
+        background: transparent;
+    }
+    
+    .hidden {
+        display: none !important;
+    }
+    
+    /* FAB Button */
+    .fab {
+        position: fixed;
+        bottom: 169px;
+        right: 20px;
+        width: 130px;
+        height: 50px;
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        border-radius: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        transition: all 0.3s ease;
+        z-index: 10;
+        animation: gentlePulse 2s infinite;
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    .fab.fab-hidden {
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(20px);
+    }
+    
+    .fab-content {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: white;
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
+    
+    @keyframes gentlePulse {
+        0%, 100% { box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); }
+        50% { box-shadow: 0 4px 25px rgba(59, 130, 246, 0.7); }
+    }
+    
+    @media (min-width: 768px) { 
+        .fab { 
+            display: none !important; 
+        } 
+    }
+    
+    .verify-badge {
+        background: rgba(245, 158, 11, 0.2);
+        border: 1px solid rgba(245, 158, 11, 0.5);
+        border-radius: 20px;
+        padding: 4px 12px;
+        font-size: 11px;
+        color: #fbbf24;
+    }
+    
+    /* Language Selector Footer */
+    .language-footer {
+        position: fixed;
+        bottom: 20px;
+        left: 20;
+        right: 0;
+        text-align: center;
+        z-index: 10;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    
+    .language-footer.visible {
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    .lang-selector-footer {
+        display: inline-flex;
+        background: rgba(0,0,0,0.6);
+        backdrop-filter: blur(10px);
+        border-radius: 50px;
+        padding: 6px 12px;
+        border: 1px solid rgba(255,255,255,0.2);
+        gap: 8px;
+    }
+    
+    .lang-btn-footer {
+        background: transparent;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 30px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.3s;
+        color: white;
+        font-size: 12px;
+    }
+    
+    .lang-btn-footer.active {
+        background: #3b82f6;
+        color: white;
+    }
+    
+    .lang-btn-footer:hover:not(.active) {
+        background: rgba(59, 130, 246, 0.5);
+    }
+    
+    @media (min-width: 768px) {
+        .language-footer {
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .language-footer {
+            bottom: 10px;
+        }
+        .lang-btn-footer {
+            padding: 4px 10px;
+            font-size: 11px;
+        }
+    }
+    
+    body.has-panel-open .fab,
+    body.has-panel-open .language-footer {
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+    }
+    
+    /* Panel Overlay */
+    .panel-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 10;
+        display: none;
+    }
+    
+    .panel-overlay.show {
+        display: block;
+    }
+    
+    /* Login panel text shadow */
+    #loginPanel .panel-label,
+    #loginPanel .panel-subtitle,
+    #loginPanel .panel-text,
+    #loginPanel .panel-link,
+    #loginPanel .login-welcome,
+    #loginPanel h2,
+    #loginPanel .remember-text,
+    #loginPanel .forgot-password-text,
+    #loginPanel .no-account-text,
+    #loginPanel .register-here-text,
+    #loginPanel .text-white,
+    #loginPanel .text-gray-400,
+    #loginPanel .text-blue-400,
+    #loginPanel .text-sm {
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+    }
+    
+    /* Icon circles */
+    #loginPanel .w-16.h-16.rounded-full {
+        background: rgba(0, 0, 0, 0.5) !important;
+        border-color: rgba(59, 130, 246, 0.6);
+    }
+</style>
+</head>
+<body class="hero-bg min-h-screen relative">
+
+    <div id="panelOverlay" class="panel-overlay"></div>
+
+    <div class="relative z-10 min-h-screen flex flex-col pb-20 md:pb-0">
+        <nav class="bg-transparent py-4">
+            <div class="container mx-auto px-4 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-graduation-cap text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <span class="font-bold text-white text-lg">Clearance<span class="text-blue-400">System</span></span>
+                        <p class="text-xs text-white/50 student-portal-text">Student Portal</p>
+                    </div>
+                </div>
+                <button onclick="openBugReportPanel()" class="report-btn w-10 h-10 rounded-full flex items-center justify-center text-red-400 hover:text-red-300 transition" title="Report Issue">
+                    <i class="fas fa-bug text-xl"></i>
+                </button>
+            </div>
+        </nav>
+
+        <div class="flex-1 flex items-center justify-center px-4 py-8 md:py-12">
+            <div class="text-center max-w-4xl mx-auto">
+                <div class="inline-block px-4 py-1 bg-blue-500/20 backdrop-blur rounded-full text-blue-200 text-sm mb-4 student-portal-badge">Student Portal</div>
+                <div class="relative inline-block mx-auto mb-4">
+                    <div class="absolute -top-3 -right-1 md:-top-4 md:-right-3 z-10">
+                        <div class="bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-[10px] md:text-xs font-bold px-2 py-0.5 md:px-3 md:py-1 rounded-md shadow-lg flex items-center gap-1">
+                            <i class="fas fa-flask text-[8px] md:text-[10px]"></i>
+                            <span class="public-beta-text">PUBLIC BETA 2.0</span>
+                        </div>
+                    </div>
+                    <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold bg-gradient-to-r from-white via-blue-100 to-blue-300 bg-clip-text text-transparent main-title">Student Clearance System</h1>
+                </div>
+                <p class="text-lg md:text-xl text-white/80 mb-6 max-w-2xl mx-auto main-subtitle">Track, Submit, and Get Cleared — All Online, All in One Place</p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button onclick="openLoginPanel()" class="btn-primary px-8 py-3 rounded-xl font-semibold text-white flex items-center justify-center gap-2"><i class="fas fa-sign-in-alt"></i> <span class="login-text">Login</span></button>
+                    <button onclick="openRegisterPanel()" class="btn-secondary px-8 py-3 rounded-xl font-semibold text-white flex items-center justify-center gap-2"><i class="fas fa-user-plus"></i> <span class="register-text">Register</span></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="container mx-auto px-4 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                <div class="rounded-2xl p-6 text-center bg-white/5 backdrop-blur">
+                    <div class="w-14 h-14 bg-blue-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4"><i class="fas fa-clock text-2xl text-blue-400"></i></div>
+                    <h3 class="text-lg font-semibold text-white mb-2 feature1-title">Real-time Tracking</h3>
+                    <p class="text-white/60 text-sm feature1-desc">Monitor your clearance status instantly</p>
+                </div>
+                <div class="rounded-2xl p-6 text-center bg-white/5 backdrop-blur">
+                    <div class="w-14 h-14 bg-blue-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4"><i class="fas fa-file-pdf text-2xl text-blue-400"></i></div>
+                    <h3 class="text-lg font-semibold text-white mb-2 feature2-title">Digital Clearance</h3>
+                    <p class="text-white/60 text-sm feature2-desc">Generate and print clearance slip</p>
+                </div>
+                <div class="rounded-2xl p-6 text-center bg-white/5 backdrop-blur">
+                    <div class="w-14 h-14 bg-blue-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4"><i class="fas fa-shield-alt text-2xl text-blue-400"></i></div>
+                    <h3 class="text-lg font-semibold text-white mb-2 feature3-title">Secure & Reliable</h3>
+                    <p class="text-white/60 text-sm feature3-desc">Secure OTP verification</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="howItWorksSection" class="container mx-auto px-4 py-8">
+            <h2 class="text-2xl md:text-3xl font-bold text-center text-white mb-8 how-it-works-title">How It Works</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                <div class="text-center"><div class="step-circle mx-auto"><span>1</span></div><h4 class="font-semibold text-white mb-1 step1-title">Register Account</h4><p class="text-white/50 text-sm step1-desc">Create your student account</p></div>
+                <div class="text-center"><div class="step-circle mx-auto"><span>2</span></div><h4 class="font-semibold text-white mb-1 step2-title">Submit Requirements</h4><p class="text-white/50 text-sm step2-desc">Upload your documents online</p></div>
+                <div class="text-center"><div class="step-circle mx-auto"><span>3</span></div><h4 class="font-semibold text-white mb-1 step3-title">Get Cleared</h4><p class="text-white/50 text-sm step3-desc">Receive your digital clearance</p></div>
+            </div>
+        </div>
+
+        <!-- BUG REPORT PANEL -->
+        <div id="bugReportPanel" class="side-panel">
+            <div class="p-6">
+                <div class="flex justify-end mb-4">
+                    <button onclick="closeBugReportPanel()" class="panel-close text-gray-400 hover:text-white text-3xl transition">&times;</button>
+                </div>
+                <div class="text-center mb-6">
+                    <div class="w-16 h-16 bg-red-600/20 rounded-full flex items-center justify-center mx-auto mb-3 border border-red-500/30">
+                        <i class="fas fa-exclamation-triangle text-red-400 text-2xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white bug-title">Report an Issue</h2>
+                    <p class="text-gray-400 text-sm bug-subtitle">Having trouble? Let us know and we'll help you ASAP.</p>
+                </div>
+                
+                <form id="bugReportFormPanel">
+                    <?php echo csrf_field(); ?>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-gray-400 text-sm mb-1"><i class="fas fa-user-circle mr-1"></i> <span class="bug-name-label">Your Name</span> <span class="text-gray-500 text-xs optional-text">(Optional)</span></label>
+                            <input type="text" name="name" id="panel_bug_name" class="w-full px-4 py-2 bg-white/10 border border-gray-600 rounded-lg text-white focus:border-red-500 focus:outline-none" placeholder="Juan Dela Cruz">
+                        </div>
+                        <div>
+                            <label class="block text-gray-400 text-sm mb-1"><i class="fas fa-envelope mr-1"></i> <span class="bug-email-label">Email Address</span> <span class="text-red-400">*</span></label>
+                            <input type="email" name="email" id="panel_bug_email" class="w-full px-4 py-2 bg-white/10 border border-gray-600 rounded-lg text-white focus:border-red-500 focus:outline-none" placeholder="student@email.com" required>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-gray-400 text-sm mb-1"><i class="fas fa-id-card mr-1"></i> <span class="bug-studentid-label">Student ID</span> <span class="text-gray-500 text-xs optional-text">(Optional)</span></label>
+                            <input type="text" name="student_id" id="panel_bug_student_id" class="w-full px-4 py-2 bg-white/10 border border-gray-600 rounded-lg text-white focus:border-red-500 focus:outline-none" placeholder="2023-00123">
+                        </div>
+                        <div>
+                            <label class="block text-gray-400 text-sm mb-1"><i class="fas fa-tags mr-1"></i> <span class="bug-type-label">Issue Type</span> <span class="text-red-400">*</span></label>
+                            <div class="relative">
+                                <button type="button" id="issueTypeButton" class="w-full px-4 py-2 bg-white/10 border border-gray-600 rounded-lg text-white text-left flex items-center justify-between focus:border-red-500 focus:outline-none">
+                                    <span id="selectedIssueType" class="flex items-center gap-2">
+                                        <i class="fas fa-bug text-red-400"></i>
+                                        <span class="select-type-text">Select Issue Type</span>
+                                    </span>
+                                    <i class="fas fa-chevron-down text-gray-400 text-sm"></i>
+                                </button>
+                                <div id="issueTypeDropdown" class="hidden absolute z-20 w-full mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-lg overflow-hidden">
+                                    <div class="issue-option px-4 py-2 hover:bg-red-600/20 cursor-pointer flex items-center gap-2 transition" data-value="login_issue"><i class="fas fa-sign-in-alt text-blue-400 w-5"></i><span class="text-white login-issue-text">Login Issue</span></div>
+                                    <div class="issue-option px-4 py-2 hover:bg-red-600/20 cursor-pointer flex items-center gap-2 transition" data-value="registration_issue"><i class="fas fa-user-plus text-green-400 w-5"></i><span class="text-white reg-issue-text">Registration Issue</span></div>
+                                    <div class="issue-option px-4 py-2 hover:bg-red-600/20 cursor-pointer flex items-center gap-2 transition" data-value="bug"><i class="fas fa-bug text-red-400 w-5"></i><span class="text-white bug-error-text">Bug / Error</span></div>
+                                    <div class="issue-option px-4 py-2 hover:bg-red-600/20 cursor-pointer flex items-center gap-2 transition" data-value="otp_issue"><i class="fas fa-envelope text-yellow-400 w-5"></i><span class="text-white otp-issue-text">OTP Issue</span></div>
+                                    <div class="issue-option px-4 py-2 hover:bg-red-600/20 cursor-pointer flex items-center gap-2 transition" data-value="other"><i class="fas fa-question-circle text-gray-400 w-5"></i><span class="text-white other-text">Other</span></div>
+                                </div>
+                            </div>
+                            <input type="hidden" name="type" id="panel_bug_type" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-gray-400 text-sm mb-1"><i class="fas fa-comment-dots mr-1"></i> <span class="bug-desc-label">Describe Your Issue</span> <span class="text-red-400">*</span></label>
+                        <textarea name="message" id="panel_bug_message" rows="5" class="w-full px-4 py-2 bg-white/10 border border-gray-600 rounded-lg text-white focus:border-red-500 focus:outline-none bug-placeholder" placeholder="Please describe the issue in detail..."></textarea>
+                    </div>
+                    
+                    <div id="panelBugMessage" class="hidden mb-4 p-3 rounded-lg text-sm"></div>
+                    
+                    <button type="button" id="panelBugSubmitBtn" class="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white py-3 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-2 shadow-lg">
+                        <i class="fas fa-paper-plane"></i> <span class="submit-report-text">Submit Report</span>
+                    </button>
+                </form>
+                
+                <div class="mt-4 text-center">
+                    <button onclick="closeBugReportPanel()" class="text-blue-400 text-sm hover:text-blue-300 transition flex items-center justify-center gap-1 mx-auto">
+                        <i class="fas fa-arrow-left text-xs"></i> <span class="back-to-login-text">Back to Login</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- LOGIN PANEL -->
+        <div id="loginPanel" class="side-panel">
+            <div class="p-6">
+                <div class="flex justify-end mb-4"><button onclick="closeLoginPanel()" class="panel-close">&times;</button></div>
+                <div class="text-center mb-6">
+                    <div class="w-16 h-16 bg-blue-600/20 rounded-full flex items-center justify-center mx-auto mb-3 border border-blue-500/30">
+                        <i class="fas fa-sign-in-alt text-blue-400 text-2xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white login-welcome">Welcome Back!</h2>
+                    <p class="panel-subtitle text-sm login-subtitle">Login to your account</p>
+                </div>
+                
+                <div id="unverifiedWarning" class="hidden mb-4 p-3 bg-yellow-500/20 border border-yellow-500/30 rounded-lg text-yellow-400 text-sm">
+                    <i class="fas fa-exclamation-triangle mr-2"></i> <span class="unverified-warning-text">Your email is not verified. Please verify before logging in.</span>
+                </div>
+                
+                <form id="loginForm">
+                    <?php echo csrf_field(); ?>
+                    <div class="mb-4">
+                        <label class="panel-label"><span class="student-id-email-label">Student ID / Email</span></label>
+                        <input type="text" name="username" id="login_username" class="panel-input login-username-placeholder" placeholder="Enter your Student ID or Email" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="panel-label"><span class="password-label">Password</span></label>
+                        <div class="relative">
+                            <input type="password" name="password" id="login_password" class="panel-input pr-10 password-placeholder" placeholder="Enter your password" required>
+                            <button type="button" onclick="togglePasswordVisibility('login_password', 'login_eye_icon')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white transition">
+                                <i id="login_eye_icon" class="fas fa-eye-slash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mb-4 flex items-center justify-between">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" name="remember" id="remember_me" class="w-4 h-4 text-blue-600 bg-white/10 border border-white/30 rounded">
+                            <span class="ml-2 text-sm text-white/70 remember-text">Remember Me</span>
+                        </label>
+                        <button type="button" onclick="openForgotPanel()" class="text-sm text-blue-400 hover:text-blue-300 forgot-password-text">Forgot Password?</button>
+                    </div>
+                    <button type="submit" id="loginSubmitBtn" class="w-full bg-blue-600 text-white py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition login-btn-text">Login</button>
+                </form>
+                <div class="mt-6 pt-4 panel-divider border-t text-center">
+                    <p class="panel-text text-sm no-account-text">Don't have an account?</p>
+                    <button onclick="openRegisterPanel()" class="panel-link text-sm font-medium hover:underline register-here-text">Register here</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW EMAIL VERIFICATION SIDE PANEL -->
+        <div id="newEmailVerifyPanel" class="side-panel">
+            <div class="p-6">
+                <div class="flex justify-end mb-4">
+                    <button onclick="closeNewEmailVerifyPanel()" class="panel-close">&times;</button>
+                </div>
+                <div class="text-center mb-6">
+                    <div class="w-16 h-16 bg-blue-600/20 rounded-full flex items-center justify-center mx-auto mb-3 border border-blue-500/30">
+                        <i class="fas fa-envelope-open-text text-blue-400 text-2xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white">Verify Your Email</h2>
+                    <p class="text-gray-400 text-sm">A 6-digit verification code has been sent to your email</p>
+                    <p class="text-blue-400 text-xs mt-2" id="newVerifyEmailDisplay"></p>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-gray-300 text-sm mb-2 text-center">Enter Verification Code</label>
+                    <div class="flex justify-center gap-3">
+                        <input type="text" maxlength="1" class="new-otp-digit w-12 h-12 text-center text-2xl font-bold bg-white/10 border border-blue-500/30 rounded-lg text-white focus:outline-none focus:border-blue-500">
+                        <input type="text" maxlength="1" class="new-otp-digit w-12 h-12 text-center text-2xl font-bold bg-white/10 border border-blue-500/30 rounded-lg text-white focus:outline-none focus:border-blue-500">
+                        <input type="text" maxlength="1" class="new-otp-digit w-12 h-12 text-center text-2xl font-bold bg-white/10 border border-blue-500/30 rounded-lg text-white focus:outline-none focus:border-blue-500">
+                        <input type="text" maxlength="1" class="new-otp-digit w-12 h-12 text-center text-2xl font-bold bg-white/10 border border-blue-500/30 rounded-lg text-white focus:outline-none focus:border-blue-500">
+                        <input type="text" maxlength="1" class="new-otp-digit w-12 h-12 text-center text-2xl font-bold bg-white/10 border border-blue-500/30 rounded-lg text-white focus:outline-none focus:border-blue-500">
+                        <input type="text" maxlength="1" class="new-otp-digit w-12 h-12 text-center text-2xl font-bold bg-white/10 border border-blue-500/30 rounded-lg text-white focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+                
+                <button id="newEmailVerifyBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition duration-200">
+                    Verify Email
+                </button>
+                
+                <div class="text-center mt-4">
+                    <button id="newResendOtpBtn" class="text-blue-400 hover:text-blue-300 text-sm transition">
+                        Didn't receive code? Resend
+                    </button>
+                </div>
+                
+                <div class="text-center mt-4">
+                    <button onclick="closeNewEmailVerifyPanel(); openRegisterPanel();" class="text-gray-400 hover:text-gray-300 text-sm transition">
+                        ← Back to Registration
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- REGISTER PANEL -->
+        <div id="registerPanel" class="side-panel">
+            <div class="p-6">
+                <div class="flex justify-end mb-4">
+                    <button onclick="closeRegisterPanel()" class="panel-close">&times;</button>
+                </div>
+                <div class="text-center mb-6">
+                    <div class="w-16 h-16 bg-green-600/20 rounded-full flex items-center justify-center mx-auto mb-3 border border-green-500/30">
+                        <i class="fas fa-user-plus text-green-400 text-2xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white register-title">Student Registration</h2>
+                    <p class="panel-subtitle text-sm register-subtitle">Create your account</p>
+                    <div class="mt-2 inline-flex items-center gap-1 verify-badge">
+                        <i class="fas fa-envelope text-xs"></i> <span class="email-verify-text">Email Verification Required</span>
+                    </div>
+                </div>
+                
+                <form id="registerForm">
+                    <?php echo csrf_field(); ?>
+                    <div class="mb-3">
+                        <label class="panel-label"><i class="fas fa-id-card mr-1"></i> <span class="student-id-label">Student ID</span> <span class="text-red-400">*</span></label>
+                        <input type="text" name="student_id" id="reg_student_id" class="panel-input studentid-placeholder" placeholder="Example: 2023-00123" required maxlength="10">
+                        <p class="text-xs text-gray-500 mt-1"><i class="fas fa-info-circle"></i> Format: YYYY-XXXXX (e.g., 2023-00123)</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <div>
+                            <label class="panel-label"><i class="fas fa-user mr-1"></i> <span class="first-name-label">First Name</span> <span class="text-red-400">*</span></label>
+                            <input type="text" name="first_name" id="reg_first_name" class="panel-input firstname-placeholder" placeholder="Juan" required>
+                        </div>
+                        <div>
+                            <label class="panel-label"><i class="fas fa-user mr-1"></i> <span class="last-name-label">Last Name</span> <span class="text-red-400">*</span></label>
+                            <input type="text" name="last_name" id="reg_last_name" class="panel-input lastname-placeholder" placeholder="Dela Cruz" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="panel-label"><i class="fas fa-envelope mr-1"></i> <span class="email-label">Email Address</span> <span class="text-red-400">*</span></label>
+                        <input type="email" name="email" id="reg_email" class="panel-input email-placeholder" placeholder="student@tcc.edu.ph" required>
+                        <p class="text-xs text-gray-500 mt-1"><i class="fas fa-info-circle"></i> <span class="verify-code-info">A verification code will be sent to this email</span></p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="panel-label"><i class="fas fa-calendar-alt mr-1"></i> <span class="birthdate-label">Birthdate</span> <span class="text-red-400">*</span></label>
+                        <input type="date" name="birthdate" id="reg_birthdate" class="panel-input" required>
+                        <p class="text-xs text-gray-500 mt-1"><i class="fas fa-info-circle"></i> <span class="age-text">Must be 16 years old or above</span></p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="panel-label"><i class="fas fa-graduation-cap mr-1"></i> <span class="course-label">Course</span> <span class="text-red-400">*</span></label>
+                        <select name="course" id="reg_course" class="panel-select" required>
+                            <option value="" class="select-course-text">-- Select Course --</option>
+                            <option value="BSIT">BS Information Technology</option>
+                            <option value="BSCS">BS Computer Science</option>
+                            <option value="BSIS">BS Information Systems</option>
+                            <option value="BSBA-FM">BSBA Financial Management</option>
+                            <option value="BSHM">BS Hospitality Management</option>
+                            <option value="BEEd">Bachelor of Elementary Education</option>
+                            <option value="BSEd-English">BSEd - English</option>
+                            <option value="BSCrim">BS Criminology</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="panel-label"><i class="fas fa-layer-group mr-1"></i> <span class="year-label">Year Level</span> <span class="text-red-400">*</span></label>
+                        <select name="year_level" id="reg_year_level" class="panel-select" required>
+                            <option value="" class="select-year-text">-- Select Year --</option>
+                            <option value="1st Year">1st Year</option>
+                            <option value="2nd Year">2nd Year</option>
+                            <option value="3rd Year">3rd Year</option>
+                            <option value="4th Year">4th Year</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="panel-label"><i class="fas fa-lock mr-1"></i> <span class="password-label-text">Password</span> <span class="text-red-400">*</span></label>
+                        <div class="relative">
+                            <input type="password" name="password" id="reg_password" class="panel-input w-full pr-10 password-placeholder-text" placeholder="Minimum 8 characters" required>
+                            <button type="button" onclick="togglePassword('reg_password', 'toggleIcon1')" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">
+                                <i id="toggleIcon1" class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="panel-label"><i class="fas fa-lock mr-1"></i> <span class="confirm-password-label">Confirm Password</span> <span class="text-red-400">*</span></label>
+                        <div class="relative">
+                            <input type="password" name="password_confirmation" id="reg_confirm_password" class="panel-input w-full pr-10 confirm-placeholder" placeholder="Repeat your password" required>
+                            <button type="button" onclick="togglePassword('reg_confirm_password', 'toggleIcon2')" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">
+                                <i id="toggleIcon2" class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" id="registerSubmitBtn" class="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-2.5 rounded-lg font-semibold hover:from-green-700 hover:to-green-800 transition register-btn-text">Register</button>
+                </form>
+                
+                <div class="mt-4 pt-4 panel-divider border-t text-center">
+                    <p class="panel-text text-sm have-account-text">Already have an account?</p>
+                    <button onclick="openLoginPanel()" class="panel-link text-sm font-medium hover:underline login-here-text">Login here</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- EMAIL VERIFICATION OTP PANEL -->
+        <div id="emailVerifyPanel" class="side-panel">
+            <div class="p-6">
+                <div class="flex justify-end mb-4">
+                    <button onclick="closeEmailVerifyPanel()" class="panel-close">&times;</button>
+                </div>
+                <div class="text-center mb-6">
+                    <div class="w-16 h-16 bg-blue-600/20 rounded-full flex items-center justify-center mx-auto mb-3 border border-blue-500/30">
+                        <i class="fas fa-envelope-open-text text-blue-400 text-2xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white verify-title">Verify Your Email</h2>
+                    <p class="panel-subtitle text-sm" id="verifyEmailAddress">A verification code has been sent to your email</p>
+                </div>
+                
+                <div class="mb-6">
+                    <div class="flex justify-center gap-3">
+                        <input type="text" maxlength="1" class="otp-digit" data-index="0" data-verify="true">
+                        <input type="text" maxlength="1" class="otp-digit" data-index="1" data-verify="true">
+                        <input type="text" maxlength="1" class="otp-digit" data-index="2" data-verify="true">
+                        <input type="text" maxlength="1" class="otp-digit" data-index="3" data-verify="true">
+                        <input type="text" maxlength="1" class="otp-digit" data-index="4" data-verify="true">
+                        <input type="text" maxlength="1" class="otp-digit" data-index="5" data-verify="true">
+                    </div>
+                    <input type="hidden" name="verify_otp" id="verify_otp_hidden">
+                    <input type="hidden" id="temp_email" value="">
+                    <input type="hidden" id="temp_student_id" value="">
+                </div>
+                
+                <button type="button" id="emailVerifyBtn" class="w-full bg-blue-600 text-white py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition verify-btn-text">Verify Email</button>
+                
+                <div class="mt-4 text-center">
+                    <button id="resendVerifyOtpBtn" class="text-gray-400 text-xs hover:text-blue-400 transition didnt-receive-text">Didn't receive code? Resend</button>
+                </div>
+                
+                <div class="mt-4 text-center">
+                    <button onclick="closeEmailVerifyPanel(); openRegisterPanel();" class="panel-link text-sm hover:underline back-to-reg-text">← Back to Registration</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- FORGOT PANEL -->
+        <div id="forgotPanel" class="side-panel">
+            <div class="p-6">
+                <div class="flex justify-end mb-4"><button onclick="closeForgotPanel()" class="panel-close">&times;</button></div>
+                <div class="text-center mb-6">
+                    <div class="w-16 h-16 bg-yellow-600/20 rounded-full flex items-center justify-center mx-auto mb-3 border border-yellow-500/30">
+                        <i class="fas fa-key text-yellow-400 text-2xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white forgot-title">Forgot Password?</h2>
+                    <p class="panel-subtitle text-sm forgot-subtitle">Enter your credentials to reset password</p>
+                </div>
+                <div class="forgot-tabs-container relative border-b border-gray-700 mb-6">
+                    <div class="flex">
+                        <button type="button" id="tabAccId" class="tab-button flex-1 py-2.5 text-sm font-medium flex items-center justify-center gap-2" style="color: #a855f7;"><i class="fas fa-id-card"></i> <span class="account-id-tab">Account ID</span></button>
+                        <button type="button" id="tabEmail" class="tab-button flex-1 py-2.5 text-sm font-medium flex items-center justify-center gap-2" style="color: #6b7280;"><i class="fas fa-envelope"></i> <span class="email-tab">Email Address</span></button>
+                    </div>
+                    <div id="slidingIndicator" class="sliding-indicator" style="width: 50%;"></div>
+                </div>
+                <div id="formAccId">
+                    <form id="forgotForm">
+                        <?php echo csrf_field(); ?>
+                        <div class="mb-4"><label class="panel-label"><span class="student-id-forgot">Student ID</span></label><input type="text" name="student_id" id="forgot_student_id" class="panel-input" placeholder="2023-00123" required></div>
+                        <div class="mb-4"><label class="panel-label"><span class="account-id-forgot">Account ID</span></label><input type="text" name="account_id" id="forgot_account_id" class="panel-input" placeholder="CLR-2026-00001" required></div>
+                        <button type="submit" class="w-full bg-yellow-600 text-white py-2.5 rounded-lg font-semibold hover:bg-yellow-700 transition send-otp-text">Send OTP</button>
+                    </form>
+                </div>
+                <div id="formEmail" class="hidden">
+                    <form id="forgotEmailForm">
+                        <?php echo csrf_field(); ?>
+                        <div class="mb-4"><label class="panel-label"><span class="student-id-email-forgot">Student ID</span></label><input type="text" name="student_id" id="forgot_email_student_id" class="panel-input" placeholder="2023-00123" required></div>
+                        <div class="mb-4"><label class="panel-label"><span class="email-address-forgot">Email Address</span></label><input type="email" name="email" id="forgot_email" class="panel-input" placeholder="student@tcc.edu.ph" required></div>
+                        <button type="submit" class="w-full bg-yellow-600 text-white py-2.5 rounded-lg font-semibold hover:bg-yellow-700 transition send-otp-email-text">Send OTP</button>
+                    </form>
+                </div>
+                <div class="mt-4 text-center"><button onclick="openLoginPanel()" class="panel-link text-sm hover:underline back-to-login-forgot">← Back to Login</button></div>
+            </div>
+        </div>
+
+        <!-- OTP PANEL -->
+        <div id="otpPanel" class="side-panel">
+            <div class="p-6">
+                <div class="flex justify-end mb-4"><button onclick="closeOtpPanel()" class="panel-close">&times;</button></div>
+                <div class="text-center mb-6">
+                    <div class="w-16 h-16 bg-purple-600/20 rounded-full flex items-center justify-center mx-auto mb-3 border border-purple-500/30">
+                        <i class="fas fa-envelope text-purple-400 text-2xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white verify-otp-title">Verify OTP</h2>
+                    <p class="panel-subtitle text-sm verify-otp-subtitle">Enter the 6-digit code sent to your email</p>
+                </div>
+                <div class="mb-6">
+                    <div class="flex justify-center gap-3">
+                        <input type="text" maxlength="1" class="otp-digit" data-index="0">
+                        <input type="text" maxlength="1" class="otp-digit" data-index="1">
+                        <input type="text" maxlength="1" class="otp-digit" data-index="2">
+                        <input type="text" maxlength="1" class="otp-digit" data-index="3">
+                        <input type="text" maxlength="1" class="otp-digit" data-index="4">
+                        <input type="text" maxlength="1" class="otp-digit" data-index="5">
+                    </div>
+                    <input type="hidden" name="otp" id="otp_hidden">
+                </div>
+                <button type="button" id="otpVerifyBtn" class="w-full bg-purple-600 text-white py-2.5 rounded-lg font-semibold hover:bg-purple-700 transition verify-otp-btn">Verify OTP</button>
+                <div class="mt-4 text-center"><button onclick="openForgotPanel()" class="panel-link text-sm hover:underline back-to-forgot">← Back</button></div>
+                <div class="mt-4 text-center"><button id="resendOtpBtn" class="text-gray-400 text-xs hover:text-purple-400 transition didnt-receive-otp">Didn't receive code? Resend</button></div>
+            </div>
+        </div>
+
+        <!-- RESET PANEL -->
+        <div id="resetPanel" class="side-panel">
+            <div class="p-6">
+                <div class="flex justify-end mb-4"><button onclick="closeResetPanel()" class="panel-close">&times;</button></div>
+                <div class="text-center mb-6">
+                    <div class="w-16 h-16 bg-green-600/20 rounded-full flex items-center justify-center mx-auto mb-3 border border-green-500/30">
+                        <i class="fas fa-lock text-green-400 text-2xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white reset-title">Reset Password</h2>
+                    <p class="panel-subtitle text-sm reset-subtitle">Create a new password</p>
+                </div>
+                <form id="resetForm">
+                    <?php echo csrf_field(); ?>
+                    <div class="mb-3"><label class="panel-label"><span class="new-password-label">New Password</span></label><input type="password" name="password" id="reset_password" class="panel-input new-password-placeholder" placeholder="Minimum 8 characters" required></div>
+                    <div class="mb-4"><label class="panel-label"><span class="confirm-new-password-label">Confirm Password</span></label><input type="password" name="password_confirmation" id="reset_confirm_password" class="panel-input confirm-new-placeholder" placeholder="Repeat new password" required></div>
+                    <button type="submit" class="w-full bg-green-600 text-white py-2.5 rounded-lg font-semibold hover:bg-green-700 transition reset-btn-text">Reset Password</button>
+                </form>
+                <div class="mt-4 text-center"><button onclick="openLoginPanel()" class="panel-link text-sm hover:underline back-to-login-reset">← Back to Login</button></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="fab" onclick="scrollToHowItWorks()">
+        <div class="fab-content">
+            <i class="fas fa-arrow-down"></i>
+            <span class="how-it-works-fab">How It Works</span>
+        </div>
+    </div>
+
+    <!-- LANGUAGE SELECTOR -->
+    <div class="language-footer">
+        <div class="lang-selector-footer">
+            <button class="lang-btn-footer active" data-lang="en">🇺🇸 English</button>
+            <button class="lang-btn-footer" data-lang="tl">🇵🇭 Tagalog</button>
+        </div>
+    </div>
+    
+    <script>
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    let tempRegistrationData = null;
+    let currentLang = localStorage.getItem('language') || 'en';
+
+    // ============ STUDENT ID FORMATTING ============
+    function formatStudentId(input) {
+        let value = input.value.replace(/\D/g, '');
+        if (value.length > 4) {
+            value = value.substring(0, 4) + '-' + value.substring(4, 9);
+        }
+        if (value.length > 10) {
+            value = value.substring(0, 10);
+        }
+        input.value = value;
+    }
+
+    function validateStudentId(input) {
+        const pattern = /^\d{4}-\d{5}$/;
+        if (input.value && !pattern.test(input.value)) {
+            input.style.borderColor = '#ef4444';
+            return false;
+        } else {
+            input.style.borderColor = 'rgba(59, 130, 246, 0.3)';
+            return true;
+        }
+    }
+
+    // ============ LANGUAGE TRANSLATIONS ============
+    const translations = {
+        en: {
+            studentPortal: "Student Portal", publicBeta: "PUBLIC BETA 2.0", mainTitle: "Student Clearance System",
+            mainSubtitle: "Track, Submit, and Get Cleared — All Online, All in One Place",
+            login: "Login", register: "Register",
+            feature1Title: "Real-time Tracking", feature1Desc: "Monitor your clearance status instantly",
+            feature2Title: "Digital Clearance", feature2Desc: "Generate and print clearance slip",
+            feature3Title: "Secure & Reliable", feature3Desc: "Secure OTP verification",
+            howItWorks: "How It Works",
+            step1Title: "Register Account", step1Desc: "Create your student account",
+            step2Title: "Submit Requirements", step2Desc: "Upload your documents online",
+            step3Title: "Get Cleared", step3Desc: "Receive your digital clearance",
+            bugTitle: "Report an Issue", bugSubtitle: "Having trouble? Let us know and we'll help you ASAP.",
+            bugNameLabel: "Your Name", bugEmailLabel: "Email Address", bugStudentIdLabel: "Student ID",
+            bugTypeLabel: "Issue Type", bugDescLabel: "Describe Your Issue", optional: "(Optional)",
+            selectType: "Select Issue Type", loginIssue: "Login Issue", regIssue: "Registration Issue",
+            bugError: "Bug / Error", otpIssue: "OTP Issue", other: "Other",
+            submitReport: "Submit Report", backToLogin: "Back to Login",
+            loginWelcome: "Welcome Back!", loginSubtitle: "Login to your account",
+            studentIdEmail: "Student ID / Email", password: "Password", rememberMe: "Remember Me",
+            forgotPassword: "Forgot Password?", noAccount: "Don't have an account?", registerHere: "Register here",
+            unverifiedWarning: "Your email is not verified. Please verify before logging in.",
+            registerTitle: "Student Registration", registerSubtitle: "Create your account",
+            emailVerifyRequired: "Email Verification Required", studentIdLabel: "Student ID",
+            firstNameLabel: "First Name", lastNameLabel: "Last Name", emailLabel: "Email Address",
+            birthdateLabel: "Birthdate", courseLabel: "Course", yearLabel: "Year Level",
+            passwordLabel: "Password", confirmPasswordLabel: "Confirm Password",
+            verifyCodeInfo: "A verification code will be sent to this email",
+            ageRequirement: "Must be 16 years old or above",
+            selectCourse: "-- Select Course --", selectYear: "-- Select Year --",
+            haveAccount: "Already have an account?", loginHere: "Login here",
+            verifyTitle: "Verify Your Email", verifyBtn: "Verify Email",
+            didntReceive: "Didn't receive code? Resend", backToReg: "← Back to Registration",
+            forgotTitle: "Forgot Password?", forgotSubtitle: "Enter your credentials to reset password",
+            accountIdTab: "Account ID", emailTab: "Email Address", sendOtp: "Send OTP",
+            backToLoginForgot: "← Back to Login",
+            verifyOtpTitle: "Verify OTP", verifyOtpSubtitle: "Enter the 6-digit code sent to your email",
+            verifyOtpBtn: "Verify OTP", didntReceiveOtp: "Didn't receive code? Resend",
+            resetTitle: "Reset Password", resetSubtitle: "Create a new password",
+            newPassword: "New Password", confirmNewPassword: "Confirm Password",
+            resetBtn: "Reset Password", backToLoginReset: "← Back to Login",
+            studentIdPlaceholder: "Example: 2023-00123", firstNamePlaceholder: "Juan",
+            lastNamePlaceholder: "Dela Cruz", emailPlaceholder: "student@tcc.edu.ph",
+            passwordPlaceholder: "Minimum 8 characters", confirmPlaceholder: "Repeat your password",
+            loginUsernamePlaceholder: "Enter your Student ID or Email",
+            loginPasswordPlaceholder: "Enter your password",
+            newPasswordPlaceholder: "Minimum 8 characters", confirmNewPlaceholder: "Repeat new password",
+            passwordMismatch: "Passwords do not match!",
+            passwordTooShort: "Password must be at least 8 characters!",
+            ageTooYoung: "You must be at least 16 years old!",
+            invalidStudentId: "Student ID must be in format: YYYY-XXXXX (e.g., 2023-00123)"
+        },
+        tl: {
+            studentPortal: "Student Portal", publicBeta: "PUBLIC BETA", mainTitle: "Student Clearance System",
+            mainSubtitle: "Subaybayan, I-submit, at Makakuha ng Clearance — Lahat Online, Isang Platform Lang",
+            login: "Mag-login", register: "Magrehistro",
+            feature1Title: "Real-time na Pagsubaybay", feature1Desc: "Subaybayan ang status ng iyong clearance",
+            feature2Title: "Digital na Clearance", feature2Desc: "Gumawa at mag-print ng clearance slip",
+            feature3Title: "Ligtas at Maaasahan", feature3Desc: "Secure na may OTP verification",
+            howItWorks: "Paano Ito Gumagana",
+            step1Title: "Magrehistro ng Account", step1Desc: "Gumawa ng iyong student account",
+            step2Title: "I-submit ang Requirements", step2Desc: "I-upload ang iyong mga dokumento",
+            step3Title: "Maging Cleared", step3Desc: "Tanggapin ang iyong digital clearance",
+            bugTitle: "Mag-ulat ng Problema", bugSubtitle: "May problema ba? Sabihin sa amin at tutulungan ka namin.",
+            bugNameLabel: "Pangalan", bugEmailLabel: "Email Address", bugStudentIdLabel: "Student ID",
+            bugTypeLabel: "Uri ng Problema", bugDescLabel: "Ilarawan ang Problema", optional: "(Opsyonal)",
+            selectType: "Pumili ng Uri", loginIssue: "Problema sa Pag-login", regIssue: "Problema sa Pagrehistro",
+            bugError: "Bug / Error", otpIssue: "Problema sa OTP", other: "Iba pa",
+            submitReport: "I-submit ang Ulat", backToLogin: "Bumalik sa Pag-login",
+            loginWelcome: "Maligayang Pagbabalik!", loginSubtitle: "Mag-login sa iyong account",
+            studentIdEmail: "Student ID / Email", password: "Password", rememberMe: "Tandaan Ako",
+            forgotPassword: "Nakalimutan ang Password?", noAccount: "Wala pang account?", registerHere: "Magrehistro dito",
+            unverifiedWarning: "Hindi pa naverify ang iyong email. Pakiverify muna bago mag-login.",
+            registerTitle: "Pagrehistro ng Estudyante", registerSubtitle: "Gumawa ng iyong account",
+            emailVerifyRequired: "Kailangan ang Email Verification", studentIdLabel: "Student ID",
+            firstNameLabel: "Pangalan", lastNameLabel: "Apelyido", emailLabel: "Email Address",
+            birthdateLabel: "Petsa ng Kapanganakan", courseLabel: "Kurso", yearLabel: "Taon",
+            passwordLabel: "Password", confirmPasswordLabel: "Kumpirmahin ang Password",
+            verifyCodeInfo: "Isang verification code ay ipapadala sa email na ito",
+            ageRequirement: "Dapat ay 16 taong gulang pataas",
+            selectCourse: "-- Pumili ng Kurso --", selectYear: "-- Pumili ng Taon --",
+            haveAccount: "May account ka na?", loginHere: "Mag-login dito",
+            verifyTitle: "I-verify ang Iyong Email", verifyBtn: "I-verify ang Email",
+            didntReceive: "Hindi nakatanggap ng code? Ipadala muli", backToReg: "← Bumalik sa Pagrehistro",
+            forgotTitle: "Nakalimutan ang Password?", forgotSubtitle: "Ilagay ang iyong mga kredensyal para i-reset ang password",
+            accountIdTab: "Account ID", emailTab: "Email Address", sendOtp: "Magpadala ng OTP",
+            backToLoginForgot: "← Bumalik sa Pag-login",
+            verifyOtpTitle: "I-verify ang OTP", verifyOtpSubtitle: "Ilagay ang 6-digit code na ipinadala sa iyong email",
+            verifyOtpBtn: "I-verify ang OTP", didntReceiveOtp: "Hindi nakatanggap ng code? Ipadala muli",
+            resetTitle: "I-reset ang Password", resetSubtitle: "Gumawa ng bagong password",
+            newPassword: "Bagong Password", confirmNewPassword: "Kumpirmahin ang Password",
+            resetBtn: "I-reset ang Password", backToLoginReset: "← Bumalik sa Pag-login",
+            studentIdPlaceholder: "Halimbawa: 2023-00123", firstNamePlaceholder: "Juan",
+            lastNamePlaceholder: "Dela Cruz", emailPlaceholder: "estudyante@tcc.edu.ph",
+            passwordPlaceholder: "Hindi bababa sa 8 characters", confirmPlaceholder: "Ulitin ang password",
+            loginUsernamePlaceholder: "Ilagay ang Student ID o Email",
+            loginPasswordPlaceholder: "Ilagay ang iyong password",
+            newPasswordPlaceholder: "Hindi bababa sa 8 characters", confirmNewPlaceholder: "Ulitin ang bagong password",
+            passwordMismatch: "Hindi tugma ang mga password!",
+            passwordTooShort: "Ang password ay dapat hindi bababa sa 8 characters!",
+            ageTooYoung: "Dapat ay 16 taong gulang pataas!",
+            invalidStudentId: "Ang Student ID ay dapat nasa format: YYYY-XXXXX (hal. 2023-00123)"
+        }
+    };
+
+    // ============ APPLY LANGUAGE ============
+    function applyLanguage(lang) {
+        const t = translations[lang];
+        if (!t) return;
+        
+        document.querySelectorAll('.student-portal-text').forEach(el => el.textContent = t.studentPortal);
+        document.querySelectorAll('.public-beta-text').forEach(el => el.textContent = t.publicBeta);
+        document.querySelectorAll('.main-title').forEach(el => el.textContent = t.mainTitle);
+        document.querySelectorAll('.main-subtitle').forEach(el => el.textContent = t.mainSubtitle);
+        document.querySelectorAll('.login-text').forEach(el => el.textContent = t.login);
+        document.querySelectorAll('.register-text').forEach(el => el.textContent = t.register);
+        document.querySelectorAll('.feature1-title').forEach(el => el.textContent = t.feature1Title);
+        document.querySelectorAll('.feature1-desc').forEach(el => el.textContent = t.feature1Desc);
+        document.querySelectorAll('.feature2-title').forEach(el => el.textContent = t.feature2Title);
+        document.querySelectorAll('.feature2-desc').forEach(el => el.textContent = t.feature2Desc);
+        document.querySelectorAll('.feature3-title').forEach(el => el.textContent = t.feature3Title);
+        document.querySelectorAll('.feature3-desc').forEach(el => el.textContent = t.feature3Desc);
+        document.querySelectorAll('.how-it-works-title').forEach(el => el.textContent = t.howItWorks);
+        document.querySelectorAll('.step1-title').forEach(el => el.textContent = t.step1Title);
+        document.querySelectorAll('.step1-desc').forEach(el => el.textContent = t.step1Desc);
+        document.querySelectorAll('.step2-title').forEach(el => el.textContent = t.step2Title);
+        document.querySelectorAll('.step2-desc').forEach(el => el.textContent = t.step2Desc);
+        document.querySelectorAll('.step3-title').forEach(el => el.textContent = t.step3Title);
+        document.querySelectorAll('.step3-desc').forEach(el => el.textContent = t.step3Desc);
+        document.querySelectorAll('.how-it-works-fab').forEach(el => el.textContent = t.howItWorks);
+        document.querySelectorAll('.bug-title').forEach(el => el.textContent = t.bugTitle);
+        document.querySelectorAll('.bug-subtitle').forEach(el => el.textContent = t.bugSubtitle);
+        document.querySelectorAll('.bug-name-label').forEach(el => el.textContent = t.bugNameLabel);
+        document.querySelectorAll('.bug-email-label').forEach(el => el.textContent = t.bugEmailLabel);
+        document.querySelectorAll('.bug-studentid-label').forEach(el => el.textContent = t.bugStudentIdLabel);
+        document.querySelectorAll('.bug-type-label').forEach(el => el.textContent = t.bugTypeLabel);
+        document.querySelectorAll('.bug-desc-label').forEach(el => el.textContent = t.bugDescLabel);
+        document.querySelectorAll('.optional-text').forEach(el => el.textContent = t.optional);
+        document.querySelectorAll('.select-type-text').forEach(el => el.textContent = t.selectType);
+        document.querySelectorAll('.login-issue-text').forEach(el => el.textContent = t.loginIssue);
+        document.querySelectorAll('.reg-issue-text').forEach(el => el.textContent = t.regIssue);
+        document.querySelectorAll('.bug-error-text').forEach(el => el.textContent = t.bugError);
+        document.querySelectorAll('.otp-issue-text').forEach(el => el.textContent = t.otpIssue);
+        document.querySelectorAll('.other-text').forEach(el => el.textContent = t.other);
+        document.querySelectorAll('.submit-report-text').forEach(el => el.textContent = t.submitReport);
+        document.querySelectorAll('.back-to-login-text').forEach(el => el.textContent = t.backToLogin);
+        document.querySelectorAll('.bug-placeholder').forEach(el => el.placeholder = t.bugDescLabel + '...');
+        document.querySelectorAll('.login-welcome').forEach(el => el.textContent = t.loginWelcome);
+        document.querySelectorAll('.login-subtitle').forEach(el => el.textContent = t.loginSubtitle);
+        document.querySelectorAll('.student-id-email-label').forEach(el => el.textContent = t.studentIdEmail);
+        document.querySelectorAll('.password-label').forEach(el => el.textContent = t.password);
+        document.querySelectorAll('.remember-text').forEach(el => el.textContent = t.rememberMe);
+        document.querySelectorAll('.forgot-password-text').forEach(el => el.textContent = t.forgotPassword);
+        document.querySelectorAll('.no-account-text').forEach(el => el.textContent = t.noAccount);
+        document.querySelectorAll('.register-here-text').forEach(el => el.textContent = t.registerHere);
+        document.querySelectorAll('.login-btn-text').forEach(el => el.textContent = t.login);
+        document.querySelectorAll('.unverified-warning-text').forEach(el => el.textContent = t.unverifiedWarning);
+        document.querySelectorAll('.login-username-placeholder').forEach(el => el.placeholder = t.loginUsernamePlaceholder);
+        document.querySelectorAll('.password-placeholder').forEach(el => el.placeholder = t.loginPasswordPlaceholder);
+        document.querySelectorAll('.register-title').forEach(el => el.textContent = t.registerTitle);
+        document.querySelectorAll('.register-subtitle').forEach(el => el.textContent = t.registerSubtitle);
+        document.querySelectorAll('.email-verify-text').forEach(el => el.textContent = t.emailVerifyRequired);
+        document.querySelectorAll('.student-id-label').forEach(el => el.textContent = t.studentIdLabel);
+        document.querySelectorAll('.first-name-label').forEach(el => el.textContent = t.firstNameLabel);
+        document.querySelectorAll('.last-name-label').forEach(el => el.textContent = t.lastNameLabel);
+        document.querySelectorAll('.email-label').forEach(el => el.textContent = t.emailLabel);
+        document.querySelectorAll('.birthdate-label').forEach(el => el.textContent = t.birthdateLabel);
+        document.querySelectorAll('.course-label').forEach(el => el.textContent = t.courseLabel);
+        document.querySelectorAll('.year-label').forEach(el => el.textContent = t.yearLabel);
+        document.querySelectorAll('.password-label-text').forEach(el => el.textContent = t.passwordLabel);
+        document.querySelectorAll('.confirm-password-label').forEach(el => el.textContent = t.confirmPasswordLabel);
+        document.querySelectorAll('.verify-code-info').forEach(el => el.textContent = t.verifyCodeInfo);
+        document.querySelectorAll('.age-text').forEach(el => el.textContent = t.ageRequirement);
+        document.querySelectorAll('.select-course-text').forEach(el => el.textContent = t.selectCourse);
+        document.querySelectorAll('.select-year-text').forEach(el => el.textContent = t.selectYear);
+        document.querySelectorAll('.have-account-text').forEach(el => el.textContent = t.haveAccount);
+        document.querySelectorAll('.login-here-text').forEach(el => el.textContent = t.loginHere);
+        document.querySelectorAll('.register-btn-text').forEach(el => el.textContent = t.register);
+        document.querySelectorAll('.studentid-placeholder').forEach(el => el.placeholder = t.studentIdPlaceholder);
+        document.querySelectorAll('.firstname-placeholder').forEach(el => el.placeholder = t.firstNamePlaceholder);
+        document.querySelectorAll('.lastname-placeholder').forEach(el => el.placeholder = t.lastNamePlaceholder);
+        document.querySelectorAll('.email-placeholder').forEach(el => el.placeholder = t.emailPlaceholder);
+        document.querySelectorAll('.password-placeholder-text').forEach(el => el.placeholder = t.passwordPlaceholder);
+        document.querySelectorAll('.confirm-placeholder').forEach(el => el.placeholder = t.confirmPlaceholder);
+        document.querySelectorAll('.verify-title').forEach(el => el.textContent = t.verifyTitle);
+        document.querySelectorAll('.verify-btn-text').forEach(el => el.textContent = t.verifyBtn);
+        document.querySelectorAll('.didnt-receive-text').forEach(el => el.textContent = t.didntReceive);
+        document.querySelectorAll('.back-to-reg-text').forEach(el => el.textContent = t.backToReg);
+        document.querySelectorAll('.forgot-title').forEach(el => el.textContent = t.forgotTitle);
+        document.querySelectorAll('.forgot-subtitle').forEach(el => el.textContent = t.forgotSubtitle);
+        document.querySelectorAll('.account-id-tab').forEach(el => el.textContent = t.accountIdTab);
+        document.querySelectorAll('.email-tab').forEach(el => el.textContent = t.emailTab);
+        document.querySelectorAll('.send-otp-text').forEach(el => el.textContent = t.sendOtp);
+        document.querySelectorAll('.send-otp-email-text').forEach(el => el.textContent = t.sendOtp);
+        document.querySelectorAll('.back-to-login-forgot').forEach(el => el.textContent = t.backToLoginForgot);
+        document.querySelectorAll('.student-id-forgot').forEach(el => el.textContent = t.studentIdLabel);
+        document.querySelectorAll('.account-id-forgot').forEach(el => el.textContent = t.accountIdTab);
+        document.querySelectorAll('.student-id-email-forgot').forEach(el => el.textContent = t.studentIdLabel);
+        document.querySelectorAll('.email-address-forgot').forEach(el => el.textContent = t.emailLabel);
+        document.querySelectorAll('.verify-otp-title').forEach(el => el.textContent = t.verifyOtpTitle);
+        document.querySelectorAll('.verify-otp-subtitle').forEach(el => el.textContent = t.verifyOtpSubtitle);
+        document.querySelectorAll('.verify-otp-btn').forEach(el => el.textContent = t.verifyOtpBtn);
+        document.querySelectorAll('.didnt-receive-otp').forEach(el => el.textContent = t.didntReceiveOtp);
+        document.querySelectorAll('.back-to-forgot').forEach(el => el.innerHTML = '← ' + t.backToLoginForgot);
+        document.querySelectorAll('.reset-title').forEach(el => el.textContent = t.resetTitle);
+        document.querySelectorAll('.reset-subtitle').forEach(el => el.textContent = t.resetSubtitle);
+        document.querySelectorAll('.new-password-label').forEach(el => el.textContent = t.newPassword);
+        document.querySelectorAll('.confirm-new-password-label').forEach(el => el.textContent = t.confirmNewPassword);
+        document.querySelectorAll('.reset-btn-text').forEach(el => el.textContent = t.resetBtn);
+        document.querySelectorAll('.back-to-login-reset').forEach(el => el.textContent = t.backToLoginReset);
+        document.querySelectorAll('.new-password-placeholder').forEach(el => el.placeholder = t.newPasswordPlaceholder);
+        document.querySelectorAll('.confirm-new-placeholder').forEach(el => el.placeholder = t.confirmNewPlaceholder);
+        
+        localStorage.setItem('language', lang);
+        currentLang = lang;
+    }
+
+    // ============ PANEL FUNCTIONS ============
+    function closeAllPanels() {
+        document.getElementById('loginPanel')?.classList.remove('open');
+        document.getElementById('registerPanel')?.classList.remove('open');
+        document.getElementById('forgotPanel')?.classList.remove('open');
+        document.getElementById('otpPanel')?.classList.remove('open');
+        document.getElementById('resetPanel')?.classList.remove('open');
+        document.getElementById('bugReportPanel')?.classList.remove('open');
+        document.getElementById('emailVerifyPanel')?.classList.remove('open');
+        document.getElementById('newEmailVerifyPanel')?.classList.remove('open');
+        document.getElementById('panelOverlay')?.classList.remove('show');
+        document.body.style.overflow = '';
+        document.body.classList.remove('has-panel-open');
+        setTimeout(() => {
+            checkFabVisibility();
+            checkLanguageVisibility();
+        }, 100);
+    }
+
+    function openLoginPanel() { 
+        closeAllPanels(); 
+        document.getElementById('loginPanel').classList.add('open'); 
+        document.getElementById('panelOverlay').classList.add('show'); 
+        document.body.style.overflow = 'hidden';
+        document.body.classList.add('has-panel-open'); 
+    }
+    
+    function closeLoginPanel() { closeAllPanels(); }
+    
+    function openRegisterPanel() { 
+        closeAllPanels(); 
+        document.getElementById('registerPanel').classList.add('open'); 
+        document.getElementById('panelOverlay').classList.add('show'); 
+        document.body.style.overflow = 'hidden';
+        document.body.classList.add('has-panel-open'); 
+    }
+    
+    function closeRegisterPanel() { closeAllPanels(); }
+    
+    function openBugReportPanel() { 
+        closeAllPanels(); 
+        document.getElementById('bugReportPanel').classList.add('open'); 
+        document.getElementById('panelOverlay').classList.add('show'); 
+        document.body.style.overflow = 'hidden';
+        document.body.classList.add('has-panel-open'); 
+    }
+    
+    function closeBugReportPanel() { closeAllPanels(); }
+    
+    function openForgotPanel() { 
+        closeAllPanels(); 
+        document.getElementById('forgotPanel').classList.add('open'); 
+        document.getElementById('panelOverlay').classList.add('show'); 
+        document.body.style.overflow = 'hidden';
+        document.body.classList.add('has-panel-open'); 
+        setTimeout(() => activateAccIdTab(), 100); 
+    }
+    
+    function closeForgotPanel() { closeAllPanels(); }
+    
+    function openOtpPanel() { 
+        closeAllPanels(); 
+        document.getElementById('otpPanel').classList.add('open'); 
+        document.getElementById('panelOverlay').classList.add('show'); 
+        document.body.style.overflow = 'hidden';
+        document.body.classList.add('has-panel-open'); 
+    }
+    
+    function closeOtpPanel() { closeAllPanels(); }
+    
+    function openResetPanel() { 
+        closeAllPanels(); 
+        document.getElementById('resetPanel').classList.add('open'); 
+        document.getElementById('panelOverlay').classList.add('show'); 
+        document.body.style.overflow = 'hidden';
+        document.body.classList.add('has-panel-open'); 
+    }
+    
+    function closeResetPanel() { closeAllPanels(); }
+    
+    function openNewEmailVerifyPanel() { 
+        closeAllPanels(); 
+        document.getElementById('newEmailVerifyPanel').classList.add('open'); 
+        document.getElementById('panelOverlay').classList.add('show'); 
+        document.body.style.overflow = 'hidden';
+        document.body.classList.add('has-panel-open'); 
+    }
+    
+    function closeNewEmailVerifyPanel() { 
+        document.getElementById('newEmailVerifyPanel').classList.remove('open'); 
+        document.getElementById('panelOverlay').classList.remove('show'); 
+        document.body.style.overflow = '';
+        document.body.classList.remove('has-panel-open');
+    }
+    
+    function closeEmailVerifyPanel() { closeAllPanels(); }
+
+    // ============ SCROLL TO HOW IT WORKS ============
+    function scrollToHowItWorks() { 
+        document.getElementById('howItWorksSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); 
+        setTimeout(() => {
+            checkFabVisibility();
+            checkLanguageVisibility();
+        }, 500);
+    }
+
+    // ============ FAB HIDE ON SCROLL ============
+    const fabButton = document.querySelector('.fab');
+    const howItWorksSection = document.getElementById('howItWorksSection');
+    
+    function checkFabVisibility() { 
+        if (!fabButton || !howItWorksSection) return;
+        if (document.body.classList.contains('has-panel-open')) {
+            fabButton.classList.add('fab-hidden');
+            return;
+        }
+        const rect = howItWorksSection.getBoundingClientRect(); 
+        if (rect.top <= window.innerHeight - 100) { 
+            fabButton.classList.add('fab-hidden'); 
+        } else { 
+            fabButton.classList.remove('fab-hidden'); 
+        } 
+    }
+
+    // ============ LANGUAGE SELECTOR FADE IN ON SCROLL ============
+    const languageFooter = document.querySelector('.language-footer');
+    
+    function checkLanguageVisibility() {
+        if (document.body.classList.contains('has-panel-open')) {
+            if (languageFooter) languageFooter.classList.remove('visible');
+            return;
+        }
+        
+        if (window.innerWidth >= 768) {
+            if (languageFooter) languageFooter.classList.add('visible');
+            return;
+        }
+        
+        if (howItWorksSection && languageFooter) {
+            const rect = howItWorksSection.getBoundingClientRect();
+            const windowHeight = window.innerHeight;
+            
+            if (rect.top <= windowHeight - 100) {
+                languageFooter.classList.add('visible');
+            } else {
+                languageFooter.classList.remove('visible');
+            }
+        }
+    }
+
+    // ============ TOAST & LOADING ============
+    function showToast(message, type) {
+        const toast = document.createElement('div');
+        toast.className = `toast-notification toast-${type}`;
+        toast.innerHTML = `<div class="flex items-center p-4 gap-3"><i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'info' ? 'fa-info-circle' : 'fa-exclamation-circle'} text-xl"></i><div class="flex-1 text-sm font-medium">${message}</div><button onclick="this.closest('.toast-notification').remove()" class="opacity-70 hover:opacity-100"><i class="fas fa-times"></i></button></div>`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 5000);
+    }
+
+    let loadingOverlay = null;
+    function showLoading(msg) { if (loadingOverlay) hideLoading(); loadingOverlay = document.createElement('div'); loadingOverlay.className = 'loading-overlay'; loadingOverlay.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><p>${msg}</p></div>`; document.body.appendChild(loadingOverlay); }
+    function hideLoading() { if (loadingOverlay) { loadingOverlay.remove(); loadingOverlay = null; } }
+
+    // ============ PASSWORD TOGGLE ============
+    function togglePasswordVisibility(inputId, iconId) {
+        const input = document.getElementById(inputId);
+        const icon = document.getElementById(iconId);
+        if (input.type === 'password') { input.type = 'text'; icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye'); }
+        else { input.type = 'password'; icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash'); }
+    }
+    
+    function togglePassword(inputId, iconId) {
+        const input = document.getElementById(inputId);
+        const icon = document.getElementById(iconId);
+        if (input.type === 'password') { input.type = 'text'; icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash'); }
+        else { input.type = 'password'; icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye'); }
+    }
+
+    // ============ OTP DIGITS SETUP ============
+    function setupOtpDigits(containerSelector) {
+        const digits = document.querySelectorAll(`${containerSelector} .otp-digit`);
+        digits.forEach((input, index) => {
+            input.addEventListener('input', function(e) {
+                this.value = this.value.replace(/[^0-9]/g, '');
+                if (this.value.length === 1 && index < 5) digits[index + 1].focus();
+                let otp = ''; digits.forEach(d => otp += d.value);
+                if (containerSelector === '#emailVerifyPanel') document.getElementById('verify_otp_hidden').value = otp;
+                else document.getElementById('otp_hidden').value = otp;
+            });
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Backspace' && this.value.length === 0 && index > 0) digits[index - 1].focus();
+            });
+        });
+    }
+
+    function setupNewOtpDigits() {
+        const digits = document.querySelectorAll('#newEmailVerifyPanel .new-otp-digit');
+        digits.forEach((input, index) => {
+            input.addEventListener('input', function(e) {
+                this.value = this.value.replace(/[^0-9]/g, '');
+                if (this.value.length === 1 && index < 5) {
+                    digits[index + 1].focus();
+                }
+            });
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Backspace' && this.value.length === 0 && index > 0) {
+                    digits[index - 1].focus();
+                }
+            });
+        });
+    }
+
+    // ============ FORGOT PASSWORD TABS ============
+    const tabAccId = document.getElementById('tabAccId');
+    const tabEmail = document.getElementById('tabEmail');
+    const formAccId = document.getElementById('formAccId');
+    const formEmail = document.getElementById('formEmail');
+    const slidingIndicator = document.getElementById('slidingIndicator');
+
+    function updateSlidingIndicator(activeTab) {
+        if (!slidingIndicator) return;
+        const activeButton = activeTab === 'accid' ? tabAccId : tabEmail;
+        if (activeButton) {
+            slidingIndicator.style.width = activeButton.offsetWidth + 'px';
+            slidingIndicator.style.transform = `translateX(${activeButton.offsetLeft}px)`;
+        }
+    }
+    function activateAccIdTab() { if(tabAccId) tabAccId.style.color = '#a855f7'; if(tabEmail) tabEmail.style.color = '#6b7280'; formAccId?.classList.remove('hidden'); formEmail?.classList.add('hidden'); updateSlidingIndicator('accid'); }
+    function activateEmailTab() { if(tabEmail) tabEmail.style.color = '#a855f7'; if(tabAccId) tabAccId.style.color = '#6b7280'; formEmail?.classList.remove('hidden'); formAccId?.classList.add('hidden'); updateSlidingIndicator('email'); }
+    if (tabAccId && tabEmail) { tabAccId.addEventListener('click', (e) => { e.preventDefault(); activateAccIdTab(); }); tabEmail.addEventListener('click', (e) => { e.preventDefault(); activateEmailTab(); }); activateAccIdTab(); }
+
+    // ============ REGISTER FORM ============
+    const studentIdInput = document.getElementById('reg_student_id');
+    if (studentIdInput) {
+        studentIdInput.addEventListener('input', function() { formatStudentId(this); });
+        studentIdInput.addEventListener('blur', function() { validateStudentId(this); });
+    }
+
+    document.getElementById('registerForm')?.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const password = document.getElementById('reg_password').value;
+        const confirm = document.getElementById('reg_confirm_password').value;
+        const birthdate = document.getElementById('reg_birthdate').value;
+        const studentId = document.getElementById('reg_student_id').value;
+        const t = translations[currentLang];
+        
+        const studentIdPattern = /^\d{4}-\d{5}$/;
+        if (!studentIdPattern.test(studentId)) {
+            showToast(t.invalidStudentId || 'Student ID must be in format: YYYY-XXXXX (e.g., 2023-00123)', 'error');
+            document.getElementById('reg_student_id').focus();
+            return;
+        }
+        
+        if (password !== confirm) { 
+            showToast(t.passwordMismatch || 'Passwords do not match!', 'error'); 
+            return; 
+        }
+        if (password.length < 8) { 
+            showToast(t.passwordTooShort || 'Password must be at least 8 characters!', 'error'); 
+            return; 
+        }
+        
+        if (birthdate) {
+            const birthDate = new Date(birthdate);
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) age--;
+            if (age < 16) { 
+                showToast(t.ageTooYoung || 'You must be at least 16 years old!', 'error'); 
+                return; 
+            }
+        }
+        
+        const formData = new FormData();
+        formData.append('_token', csrfToken);
+        formData.append('student_id', studentId);
+        formData.append('first_name', document.getElementById('reg_first_name').value);
+        formData.append('last_name', document.getElementById('reg_last_name').value);
+        formData.append('email', document.getElementById('reg_email').value);
+        formData.append('birthdate', birthdate);
+        formData.append('course', document.getElementById('reg_course').value);
+        formData.append('year_level', document.getElementById('reg_year_level').value);
+        formData.append('password', password);
+        formData.append('password_confirmation', confirm);
+        
+        showLoading('Creating your account...');
+        
+        try {
+            const response = await fetch('/register', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            const data = await response.json();
+            hideLoading();
+            
+            if (data.success) {
+                showToast(data.message, 'success');
+                tempRegistrationData = {
+                    email: document.getElementById('reg_email').value,
+                    student_id: studentId
+                };
+                document.querySelectorAll('#newEmailVerifyPanel .new-otp-digit').forEach(d => d.value = '');
+                closeAllPanels();
+                openNewEmailVerifyPanel();
+                document.getElementById('registerForm').reset();
+                if (studentIdInput) studentIdInput.value = '';
+            } else {
+                showToast(data.message || 'Registration failed', 'error');
+            }
+        } catch (error) {
+            hideLoading();
+            console.error('Error:', error);
+            showToast('Network error. Please try again.', 'error');
+        }
+    });
+
+    // ============ EMAIL VERIFY ============
+    document.getElementById('emailVerifyBtn')?.addEventListener('click', async function() {
+        let otp = ''; 
+        document.querySelectorAll('#emailVerifyPanel .otp-digit').forEach(d => { 
+            otp += d.value; 
+        });
+        
+        if (otp.length !== 6) { 
+            showToast('Please enter the complete 6-digit code', 'error'); 
+            return; 
+        }
+        
+        showLoading('Verifying email...');
+        
+        try {
+            const response = await fetch('/email/verify-otp', {
+                method: 'POST', 
+                headers: { 
+                    'Content-Type': 'application/json', 
+                    'X-CSRF-TOKEN': csrfToken 
+                },
+                body: JSON.stringify({ otp: otp })
+            });
+            
+            const data = await response.json(); 
+            hideLoading();
+            
+            if (data.success) {
+                showToast(data.message, 'success');
+                setTimeout(() => {
+                    closeAllPanels();
+                    openLoginPanel();
+                    tempRegistrationData = null;
+                }, 1500);
+            } else {
+                showToast(data.message, 'error');
+                document.querySelectorAll('#emailVerifyPanel .otp-digit').forEach(d => d.value = '');
+                document.getElementById('verify_otp_hidden').value = '';
+                document.querySelectorAll('#emailVerifyPanel .otp-digit')[0]?.focus();
+            }
+        } catch (error) { 
+            hideLoading(); 
+            console.error('Error:', error);
+            showToast('Network error. Please try again.', 'error'); 
+        }
+    });
+
+    // New Email Verification
+    document.getElementById('newEmailVerifyBtn')?.addEventListener('click', async function() {
+        let otp = ''; 
+        document.querySelectorAll('#newEmailVerifyPanel .new-otp-digit').forEach(d => { 
+            otp += d.value; 
+        });
+        
+        if (otp.length !== 6) { 
+            showToast('Please enter the complete 6-digit code', 'error'); 
+            return; 
+        }
+        
+        showLoading('Verifying email...');
+        
+        try {
+            const response = await fetch('/email/verify-otp', {
+                method: 'POST', 
+                headers: { 
+                    'Content-Type': 'application/json', 
+                    'X-CSRF-TOKEN': csrfToken 
+                },
+                body: JSON.stringify({ otp: otp })
+            });
+            
+            const data = await response.json(); 
+            hideLoading();
+            
+            if (data.success) {
+                showToast(data.message, 'success');
+                setTimeout(() => {
+                    closeNewEmailVerifyPanel();
+                    openLoginPanel();
+                    tempRegistrationData = null;
+                }, 1500);
+            } else {
+                showToast(data.message, 'error');
+                document.querySelectorAll('#newEmailVerifyPanel .new-otp-digit').forEach(d => d.value = '');
+                document.querySelectorAll('#newEmailVerifyPanel .new-otp-digit')[0]?.focus();
+            }
+        } catch (error) { 
+            hideLoading(); 
+            showToast('Network error. Please try again.', 'error'); 
+        }
+    });
+
+    document.getElementById('newResendOtpBtn')?.addEventListener('click', async function() {
+        if (!tempRegistrationData) { 
+            showToast('No registration data found', 'error'); 
+            return; 
+        }
+        
+        this.disabled = true;
+        this.innerHTML = 'Sending...';
+        
+        showLoading('Resending code...');
+        try {
+            const response = await fetch('/email/verify-resend', {
+                method: 'POST', 
+                headers: { 
+                    'Content-Type': 'application/json', 
+                    'X-CSRF-TOKEN': csrfToken 
+                }
+            });
+            const data = await response.json(); 
+            hideLoading();
+            
+            if (data.success) { 
+                showToast('New verification code sent!', 'success'); 
+                document.querySelectorAll('#newEmailVerifyPanel .new-otp-digit').forEach(d => d.value = ''); 
+            } else { 
+                showToast(data.message || 'Failed to resend', 'error'); 
+            }
+        } catch (error) { 
+            hideLoading(); 
+            showToast('Network error. Please try again.', 'error'); 
+        } finally {
+            this.disabled = false;
+            this.innerHTML = "Didn't receive code? Resend";
+        }
+    });
+
+    // ============ FORGOT PASSWORD FORMS ============
+    document.getElementById('forgotForm')?.addEventListener('submit', async function(e) {
+        e.preventDefault(); showLoading('Sending OTP...');
+        const formData = new FormData(this);
+        try {
+            const response = await fetch('/password/otp/send', { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            const data = await response.json(); hideLoading();
+            if (data.success) { showToast('OTP sent to your email!', 'success'); openOtpPanel(); }
+            else { showToast(data.message, 'error'); }
+        } catch (error) { hideLoading(); showToast('Network error. Please try again.', 'error'); }
+    });
+
+    document.getElementById('forgotEmailForm')?.addEventListener('submit', async function(e) {
+        e.preventDefault(); showLoading('Sending OTP...');
+        const formData = new FormData(this);
+        try {
+            const response = await fetch('/forgot-password-email', { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            const data = await response.json(); hideLoading();
+            if (data.success) { showToast('OTP sent to your email!', 'success'); openOtpPanel(); }
+            else { showToast(data.message, 'error'); }
+        } catch (error) { hideLoading(); showToast('Network error. Please try again.', 'error'); }
+    });
+
+    document.getElementById('otpVerifyBtn')?.addEventListener('click', async function() {
+        const otp = document.getElementById('otp_hidden')?.value || '';
+        if (otp.length !== 6) { showToast('Please enter the complete 6-digit OTP', 'error'); return; }
+        showLoading('Verifying OTP...');
+        const formData = new FormData(); formData.append('otp', otp);
+        try {
+            const response = await fetch('/password/otp/verify', { method: 'POST', body: formData, headers: { 'X-CSRF-TOKEN': csrfToken } });
+            const data = await response.json(); hideLoading();
+            if (data.success) { showToast('OTP verified!', 'success'); setTimeout(() => openResetPanel(), 1500); }
+            else { showToast(data.message || 'Invalid OTP', 'error'); document.querySelectorAll('#otpPanel .otp-digit').forEach(d => d.value = ''); }
+        } catch (error) { hideLoading(); showToast('Network error. Please try again.', 'error'); }
+    });
+
+    document.getElementById('resendVerifyOtpBtn')?.addEventListener('click', async function() {
+        if (!tempRegistrationData) { 
+            showToast('No registration data found', 'error'); 
+            return; 
+        }
+        
+        this.disabled = true;
+        this.innerHTML = 'Sending...';
+        
+        showLoading('Resending code...');
+        try {
+            const response = await fetch('/email/verify-resend', {
+                method: 'POST', 
+                headers: { 
+                    'Content-Type': 'application/json', 
+                    'X-CSRF-TOKEN': csrfToken 
+                }
+            });
+            const data = await response.json(); 
+            hideLoading();
+            
+            if (data.success) { 
+                showToast('New verification code sent!', 'success'); 
+                document.querySelectorAll('#emailVerifyPanel .otp-digit').forEach(d => d.value = ''); 
+                document.getElementById('verify_otp_hidden').value = '';
+            } else { 
+                showToast(data.message || 'Failed to resend', 'error'); 
+            }
+        } catch (error) { 
+            hideLoading(); 
+            showToast('Network error. Please try again.', 'error'); 
+        } finally {
+            this.disabled = false;
+            this.innerHTML = "Didn't receive code? Resend";
+        }
+    });
+
+    // ============ LOGIN FORM ============
+    document.getElementById('loginForm')?.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const username = document.getElementById('login_username').value;
+        const password = document.getElementById('login_password').value;
+        if (!username || !password) { 
+            showToast('Please enter both username and password', 'error'); 
+            return; 
+        }
+        showLoading('Logging in...');
+        
+        const formData = new FormData(this);
+        formData.append('_token', csrfToken);
+        
+        try {
+            const response = await fetch('/login', { 
+                method: 'POST', 
+                body: formData, 
+                headers: { 
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': csrfToken
+                } 
+            });
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                const data = await response.json(); 
+                hideLoading();
+                if (data.success) { 
+                    showToast('Login successful! Redirecting...', 'success'); 
+                    setTimeout(() => { 
+                        window.location.href = data.redirect; 
+                    }, 500); 
+                } else { 
+                    showToast(data.message || 'Invalid credentials', 'error');
+                    if (data.message && data.message.includes('verify')) {
+                        setTimeout(() => {
+                            openNewEmailVerifyPanel();
+                        }, 1500);
+                    }
+                }
+            } else { 
+                window.location.href = response.url; 
+            }
+        } catch (error) { 
+            hideLoading(); 
+            console.error('Login error:', error);
+            showToast('Network error. Please try again.', 'error'); 
+        }
+    });
+
+    // ============ RESET FORM ============
+    document.getElementById('resetForm')?.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const password = document.getElementById('reset_password').value;
+        const confirm = document.getElementById('reset_confirm_password').value;
+        const t = translations[currentLang];
+        
+        if (password !== confirm) {
+            showToast(t.passwordMismatch || 'Passwords do not match!', 'error');
+            return;
+        }
+        if (password.length < 8) {
+            showToast(t.passwordTooShort || 'Password must be at least 8 characters!', 'error');
+            return;
+        }
+        
+        showLoading('Resetting password...');
+        const formData = new FormData(this);
+        formData.append('_token', csrfToken);
+        
+        try {
+            const response = await fetch('/password/reset', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const data = await response.json();
+            hideLoading();
+            
+            if (data.success) {
+                showToast('Password reset successful! Please login.', 'success');
+                setTimeout(() => {
+                    closeAllPanels();
+                    openLoginPanel();
+                }, 1500);
+            } else {
+                showToast(data.message || 'Password reset failed', 'error');
+            }
+        } catch (error) {
+            hideLoading();
+            showToast('Network error. Please try again.', 'error');
+        }
+    });
+
+    // ============ BUG REPORT SUBMIT ============
+    document.getElementById('panelBugSubmitBtn')?.addEventListener('click', async function() {
+        const email = document.getElementById('panel_bug_email').value;
+        const type = document.getElementById('panel_bug_type').value;
+        const message = document.getElementById('panel_bug_message').value;
+        
+        if (!email || !type || !message) {
+            showToast('Please fill in all required fields', 'error');
+            return;
+        }
+        
+        showLoading('Submitting report...');
+        const formData = new FormData(document.getElementById('bugReportFormPanel'));
+        formData.append('_token', csrfToken);
+        
+        try {
+            const response = await fetch('/report-issue', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const data = await response.json();
+            hideLoading();
+            
+            if (data.success) {
+                showToast('Report submitted successfully!', 'success');
+                setTimeout(() => {
+                    closeBugReportPanel();
+                    document.getElementById('bugReportFormPanel').reset();
+                    document.getElementById('panel_bug_type').value = '';
+                    const defaultText = document.getElementById('selectedIssueType');
+                    if (defaultText) {
+                        defaultText.innerHTML = '<i class="fas fa-bug text-red-400"></i> <span class="select-type-text">Select Issue Type</span>';
+                    }
+                }, 1500);
+            } else {
+                showToast(data.message || 'Failed to submit report', 'error');
+            }
+        } catch (error) {
+            hideLoading();
+            showToast('Network error. Please try again.', 'error');
+        }
+    });
+
+    // ============ ISSUE TYPE DROPDOWN ============
+    const issueTypeButton = document.getElementById('issueTypeButton');
+    const issueTypeDropdown = document.getElementById('issueTypeDropdown');
+    const selectedIssueTypeSpan = document.getElementById('selectedIssueType');
+    const issueTypeInput = document.getElementById('panel_bug_type');
+    if (issueTypeButton) { issueTypeButton.addEventListener('click', function(e) { e.stopPropagation(); issueTypeDropdown.classList.toggle('hidden'); }); }
+    document.querySelectorAll('.issue-option').forEach(option => { option.addEventListener('click', function() { const value = this.getAttribute('data-value'); const icon = this.querySelector('i').cloneNode(true); const text = this.querySelector('span').textContent; selectedIssueTypeSpan.innerHTML = ''; selectedIssueTypeSpan.appendChild(icon); selectedIssueTypeSpan.appendChild(document.createTextNode(' ' + text)); issueTypeInput.value = value; issueTypeDropdown.classList.add('hidden'); }); });
+    document.addEventListener('click', function(e) { if (issueTypeButton && issueTypeDropdown && !issueTypeButton.contains(e.target) && !issueTypeDropdown.contains(e.target)) { issueTypeDropdown.classList.add('hidden'); } });
+
+    // ============ OVERLAY AND ESCAPE ============
+    document.getElementById('panelOverlay')?.addEventListener('click', function(e) { if (e.target === this) closeAllPanels(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAllPanels(); });
+
+    // ============ LANGUAGE SELECTOR BUTTONS ============
+    document.querySelectorAll('.lang-btn-footer').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const lang = this.getAttribute('data-lang');
+            document.querySelectorAll('.lang-btn-footer').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            applyLanguage(lang);
+        });
+    });
+
+    // ============ INITIALIZE ============
+    function initLanguage() {
+        setupNewOtpDigits();
+        applyLanguage(currentLang);
+        document.querySelectorAll('.lang-btn-footer').forEach(btn => {
+            if (btn.getAttribute('data-lang') === currentLang) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    }
+
+    // Setup OTP
+    setupOtpDigits('#emailVerifyPanel');
+    setupOtpDigits('#otpPanel');
+    
+    // Initialize language
+    initLanguage();
+    
+    // Add scroll listeners
+    window.addEventListener('scroll', function() {
+        checkFabVisibility();
+        checkLanguageVisibility();
+    });
+    window.addEventListener('resize', function() {
+        checkFabVisibility();
+        checkLanguageVisibility();
+    });
+    
+    // Initial checks
+    setTimeout(() => {
+        checkFabVisibility();
+        checkLanguageVisibility();
+    }, 100);
+    
+    console.log('All systems ready!');
+    </script>
+</body>
+</html><?php /**PATH /home/vol15_6/infinityfree.com/if0_42013478/voidclearancesystem.gt.tc/htdocs/resources/views/welcome.blade.php ENDPATH**/ ?>
