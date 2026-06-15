@@ -69,7 +69,7 @@
 
     <!-- Sidebar -->
     <aside id="sidebar" class="sidebar fixed top-0 left-0 h-full w-64 bg-white shadow-xl z-40 flex flex-col sidebar-transition">
-        <div class="p-5 border-b">
+        <div class="p-5 border-b border-gray-200">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
                     <i class="fas fa-shield-alt text-white text-xl"></i>
@@ -85,6 +85,10 @@
             <a href="{{ route('admin.dashboard') }}" class="nav-link flex items-center gap-3 px-5 py-3 text-gray-700 hover:bg-gray-100 transition">
                 <i class="fas fa-tachometer-alt w-5"></i>
                 <span>Dashboard</span>
+            </a>
+            <a href="{{ route('admin.courses') }}" class="nav-link flex items-center gap-3 px-5 py-3 text-gray-700 hover:bg-gray-100 transition">
+                <i class="fas fa-book-open w-5"></i>
+                <span>Courses</span>
             </a>
             <a href="{{ route('admin.students') }}" class="nav-link flex items-center gap-3 px-5 py-3 text-gray-700 hover:bg-gray-100 transition">
                 <i class="fas fa-users w-5"></i>
@@ -102,6 +106,13 @@
                 <i class="fas fa-bullhorn w-5"></i>
                 <span>Announcements</span>
             </a>
+            
+            <!-- REMINDERS LINK - DISABLED (commented out to fix 500 error) -->
+            {{-- <a href="{{ route('admin.reminders') }}" class="nav-link flex items-center gap-3 px-5 py-3 text-gray-700 hover:bg-gray-100 transition">
+                <i class="fas fa-bell w-5"></i>
+                <span>Reminders Staff/Officers</span>
+            </a> --}}
+            
             <a href="{{ route('admin.profile') }}" class="nav-link flex items-center gap-3 px-5 py-3 text-gray-700 hover:bg-gray-100 transition">
                 <i class="fas fa-user-circle w-5"></i>
                 <span>My Profile</span>
@@ -111,9 +122,7 @@
                 <span>Backup</span>
             </a>
             
-           
-            
-            <div class="border-t my-3 mx-5"></div>
+            <div class="border-t my-3 mx-5 border-gray-200"></div>
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit" class="nav-link flex items-center gap-3 px-5 py-3 text-red-600 hover:bg-red-50 transition w-full text-left">
@@ -123,7 +132,7 @@
             </form>
         </nav>
 
-        <div class="p-4 border-t text-center text-xs text-gray-400">
+        <div class="p-4 border-t border-gray-200 text-center text-xs text-gray-400">
             <p>© {{ date('Y') }} Clearance System</p>
             <p>Admin v1.0</p>
         </div>
@@ -173,7 +182,7 @@
                     
                     <span class="text-sm text-gray-600 hidden sm:block">{{ session('admin_email', 'Admin') }}</span>
                     
-                    <!-- Secret IP Logs Trigger - Hidden in profile icon -->
+                    <!-- Secret IP Logs Trigger -->
                     <div class="relative">
                         <div id="secretProfileIcon" class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-200 transition">
                             <i class="fas fa-user-shield text-blue-600 text-sm"></i>
@@ -205,6 +214,31 @@
     
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+    // ============ MOBILE SIDEBAR ============
+    const mobileBtn = document.getElementById('mobileMenuBtn');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    
+    if(mobileBtn) {
+        mobileBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('hidden');
+            document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
+        });
+    }
+    if(overlay) {
+        overlay.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            overlay.classList.add('hidden');
+            document.body.style.overflow = '';
+        });
+    }
+    
+    // Active nav link highlight
+    document.querySelectorAll('.nav-link').forEach(link => {
+        if(link.href === window.location.href) link.classList.add('nav-active');
+    });
+    
     // ============ NOTIFICATION FUNCTIONS ============
     
     // Get base URL
@@ -219,12 +253,7 @@
                 'Content-Type': 'application/json'
             }
         })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
             const badge = document.getElementById('notificationBadge');
             if (badge) {
@@ -238,9 +267,7 @@
                 }
             }
         })
-        .catch(error => {
-            console.error('Error loading unread count:', error);
-        });
+        .catch(error => console.error('Error loading unread count:', error));
     }
     
     // Load notifications for dropdown
@@ -252,12 +279,7 @@
                 'Content-Type': 'application/json'
             }
         })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
             const container = document.getElementById('notificationList');
             if (!container) return;
@@ -471,7 +493,7 @@
                     <h3 class="text-xl font-bold text-white flex items-center gap-2">
                         <i class="fas fa-network-wired text-blue-400"></i>
                         Secret IP Logs
-                        <span class="text-xs text-gray-400 bg-gray-700 px-2 py-1 rounded-full ml-2">Admin Only </span>
+                        <span class="text-xs text-gray-400 bg-gray-700 px-2 py-1 rounded-full ml-2">Admin Only</span>
                     </h3>
                     <button onclick="closeSecretIpLogs()" class="text-gray-400 hover:text-white text-2xl transition">&times;</button>
                 </div>
@@ -554,6 +576,5 @@
 </script>
     @stack('scripts')
     <!-- Tracker -->
-<img src="{{ url('/track.gif') }}" width="1" height="1" style="display: none;">
 </body>
 </html>

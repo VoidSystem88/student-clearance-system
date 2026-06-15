@@ -29,26 +29,23 @@ class LoginController extends Controller
 
         if ($user && Hash::check($request->password, $user->password)) {
             
-            // ============ CHECK IF EMAIL IS VERIFIED (FOR STUDENTS) ============
+            // ============ EMAIL VERIFICATION CHECK (STUDENT ONLY) ============
             if ($user->role === 'student' && !$user->hasVerifiedEmail()) {
-                // Store student ID in session for verification
                 session(['pending_verification_student_id' => $user->id]);
-                
-                // Resend OTP
                 $user->sendEmailVerificationNotification();
                 
                 if ($request->ajax()) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Please verify your email first. A new verification code has been sent to your email.',
+                        'message' => 'Please verify your email first. A new verification code has been sent.',
+                        'needs_verification' => true,
                         'redirect' => route('verification.notice')
                     ], 401);
                 }
-                
-                return back()->with('error', 'Please verify your email before logging in. A verification code has been sent.');
+                return back()->with('error', 'Please verify your email before logging in.');
             }
-            // ===================================================================
             
+            // ============ ACCOUNT ACTIVE CHECK ============
             if ($user->role === 'student' && !$user->is_active) {
                 if ($request->ajax()) {
                     return response()->json([
@@ -60,19 +57,7 @@ class LoginController extends Controller
             }
             
             // ============ 2FA CHECK FOR ADMIN AND SUPPORT ============
-            $needs2FA = false;
-            
-            // Check if user is admin, super_admin, or support with 2FA enabled
             if (in_array($user->role, ['admin', 'super_admin', 'support']) && $user->admin_2fa_enabled) {
-                $needs2FA = true;
-            }
-            
-            Log::info('=== 2FA TRIGGER CHECK ===');
-            Log::info('User role: ' . $user->role);
-            Log::info('2FA enabled: ' . $user->admin_2fa_enabled);
-            Log::info('Needs 2FA: ' . ($needs2FA ? 'Yes' : 'No'));
-            
-            if ($needs2FA) {
                 $code = rand(100000, 999999);
                 
                 $user->admin_2fa_code = $code;
@@ -113,7 +98,6 @@ class LoginController extends Controller
                 session(['2fa_user_id' => $user->id]);
                 $request->session()->regenerate();
                 
-                // Determine correct 2FA route based on role
                 $redirectRoute = $user->role === 'support' ? route('support.2fa.verify') : route('admin.2fa.verify');
                 
                 if ($request->ajax()) {
@@ -127,10 +111,9 @@ class LoginController extends Controller
                 
                 return redirect($redirectRoute)->with('info', 'Verification code sent to your email.');
             }
-            // ============ END OF 2FA CHECK ============
             
             // ============ DIRECT LOGIN (NO 2FA) ============
-            Auth::login($user);
+            Auth::login($user, $request->boolean('remember'));
             $request->session()->regenerate();
             
             // Determine redirect URL based on role
@@ -142,7 +125,7 @@ class LoginController extends Controller
             } elseif ($user->role === 'support') {
                 $redirectUrl = route('support.dashboard');
             } elseif ($user->role === 'officer') {
-                $redirectUrl = route('officer.dashboard');  // <-- OFFICER REDIRECT NASA TAMANG LUGAR
+                $redirectUrl = route('officer.dashboard');
             } else {
                 $redirectUrl = route('student.dashboard');
             }
@@ -152,7 +135,8 @@ class LoginController extends Controller
                     'success' => true,
                     'role' => $user->role,
                     'redirect' => $redirectUrl,
-                    'message' => 'Login successful!'
+                    'message' => 'Login successful!',
+                    'auto_login' => $request->input('auto_login', false),
                 ]);
             }
             

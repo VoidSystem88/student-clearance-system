@@ -170,12 +170,16 @@ class StudentAuthController extends Controller
             }
             
             DB::commit();
-            
+
+            // ✅ SET SESSION FLAG NA BAGONG REGISTER ITO (para hindi mag-auto-login)
+            session(['is_new_registration' => true]);
+
             if ($request->ajax()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Registration successful! Please verify your email.',
-                    'redirect' => route('verification.notice')
+                    'is_new_registration' => true,  // ✅ IDAGDAG ITO
+                    //'redirect' => route('verification.notice')
                 ]);
             }
             

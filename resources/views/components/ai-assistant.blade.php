@@ -178,6 +178,25 @@
         line-height: 1.5;
     }
     
+    /* Better formatting for lists and spacing */
+    .ai-message-bubble strong {
+        color: #60a5fa;
+        font-weight: 600;
+    }
+    
+    .ai-message-bubble br {
+        margin-bottom: 4px;
+    }
+    
+    .ai-message-bubble ul, .ai-message-bubble ol {
+        margin: 8px 0;
+        padding-left: 20px;
+    }
+    
+    .ai-message-bubble li {
+        margin: 4px 0;
+    }
+    
     .ai-message.ai .ai-message-bubble {
         background: rgba(30, 58, 95, 0.3);
         border: 1px solid rgba(59, 130, 246, 0.3);
@@ -269,6 +288,27 @@
         color: #60a5fa;
     }
     
+    /* Ticket button style */
+    .ai-ticket-btn {
+        display: inline-block;
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 500;
+        margin-top: 10px;
+        transition: all 0.2s;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .ai-ticket-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    }
+    
     @media (max-width: 768px) {
         .ai-main-btn img { width: 95px !important; height: 95px !important; }
         .ai-chat-panel { width: 95% !important; }
@@ -336,6 +376,97 @@
     
     // ============ USER DATA ============
     let currentUser = window.VoidUserData || null;
+    
+    // ============ FORMAT TEXT FUNCTION ============
+    function formatText(text) {
+        if (!text) return '';
+        
+        // Convert markdown bold **text** to <strong>text</strong>
+        text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        
+        // Convert line breaks to <br>
+        text = text.replace(/\n/g, '<br>');
+        
+        // Convert bullet points (• or - or *) to proper HTML lists
+        // Pattern for bullet points: • Text or - Text or * Text
+        const bulletPattern = /(?:^|<br>)(?:\s*[•\-\*]\s+)([^<]+)/g;
+        let hasBullets = text.match(/[•\-\*]\s+\S+/);
+        
+        if (hasBullets) {
+            // Split into lines and process
+            let lines = text.split('<br>');
+            let inList = false;
+            let processedLines = [];
+            
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i];
+                // Check if line starts with bullet
+                let bulletMatch = line.match(/^\s*[•\-\*]\s+(.*)$/);
+                
+                if (bulletMatch) {
+                    if (!inList) {
+                        processedLines.push('<ul style="margin: 8px 0; padding-left: 20px;">');
+                        inList = true;
+                    }
+                    processedLines.push(`<li style="margin: 4px 0;">${bulletMatch[1]}</li>`);
+                } else {
+                    if (inList) {
+                        processedLines.push('</ul>');
+                        inList = false;
+                    }
+                    if (line.trim()) {
+                        processedLines.push(line);
+                    }
+                }
+            }
+            if (inList) {
+                processedLines.push('</ul>');
+            }
+            text = processedLines.join('<br>');
+        }
+        
+        // Convert numbered lists (1., 2., etc.)
+        const numberPattern = /(?:^|<br>)(\d+)\.\s+([^<]+)/g;
+        if (text.match(/\d+\.\s+\S+/)) {
+            let lines = text.split('<br>');
+            let inNumList = false;
+            let processedLines = [];
+            let lastNum = 0;
+            
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i];
+                let numMatch = line.match(/^(\d+)\.\s+(.*)$/);
+                
+                if (numMatch) {
+                    let currentNum = parseInt(numMatch[1]);
+                    if (!inNumList || currentNum <= lastNum) {
+                        if (inNumList) processedLines.push('</ol>');
+                        processedLines.push('<ol style="margin: 8px 0; padding-left: 20px;">');
+                        inNumList = true;
+                    }
+                    processedLines.push(`<li style="margin: 4px 0;">${numMatch[2]}</li>`);
+                    lastNum = currentNum;
+                } else {
+                    if (inNumList) {
+                        processedLines.push('</ol>');
+                        inNumList = false;
+                    }
+                    if (line.trim()) {
+                        processedLines.push(line);
+                    }
+                }
+            }
+            if (inNumList) {
+                processedLines.push('</ol>');
+            }
+            text = processedLines.join('<br>');
+        }
+        
+        // Fix multiple <br> tags
+        text = text.replace(/(<br>){3,}/g, '<br><br>');
+        
+        return text;
+    }
     
     // ============ DETECT LANGUAGE ============
     function detectLanguage(text) {
@@ -419,12 +550,26 @@
         return null;
     }
     
+    // ============ CREATE TICKET BUTTON ============
+    function addTicketButton(response) {
+        // Check if response is about course/year change
+        if (response.toLowerCase().includes('course or year change') || 
+            response.toLowerCase().includes('change course') ||
+            response.toLowerCase().includes('change year') ||
+            response.toLowerCase().includes('support ticket')) {
+            
+            const ticketBtn = `<br><br><a href="/student/support-tickets" class="ai-ticket-btn" target="_blank">🎫 Create Support Ticket →</a>`;
+            return response + ticketBtn;
+        }
+        return response;
+    }
+    
     // ============ MAIN AI RESPONSE ============
     window.getAIResponse = async function(question) {
         // Check for teaching command first (local only)
         const teachingResponse = await handleTeachingCommand(question);
         if (teachingResponse) {
-            return teachingResponse;
+            return formatText(teachingResponse);
         }
         
         const lang = detectLanguage(question);
@@ -463,7 +608,13 @@
             }
         }
         
-        return answer;
+        // Format the answer with proper HTML
+        let formattedAnswer = formatText(answer);
+        
+        // Add ticket button if needed
+        formattedAnswer = addTicketButton(formattedAnswer);
+        
+        return formattedAnswer;
     };
     
     // ============ DARK MODE LOGO SWITCHER ============
@@ -622,13 +773,22 @@
     function addMessage(message, isUser = false) {
         const div = document.createElement('div');
         div.className = `ai-message ${isUser ? 'user' : 'ai'}`;
+        
+        // Message is already formatted with HTML
         if (isUser) {
-            div.innerHTML = `<div class="ai-message-avatar"><i class="fas fa-user"></i></div><div class="ai-message-bubble">${message}</div>`;
+            div.innerHTML = `<div class="ai-message-avatar"><i class="fas fa-user"></i></div><div class="ai-message-bubble">${escapeHtml(message)}</div>`;
         } else {
             div.innerHTML = `<div class="ai-message-avatar"><img src="/images/void.png" alt="Void AI"></div><div class="ai-message-bubble">${message}</div>`;
         }
         aiChatMessages.appendChild(div);
         aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
+    }
+    
+    // Helper function to escape HTML for user messages
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
     
     function showTyping() {
@@ -664,13 +824,17 @@
         const welcome = document.getElementById('aiWelcomeMessage');
         if (welcome) {
             if (currentUser) {
-                welcome.innerHTML = `👋 <strong>Hi ${currentUser.name}!</strong><br><br>
-                                    I'm <strong>Void</strong>, your AI clearance assistant.<br><br>
-                                    Ask me anything about clearance! 😊`;
+                welcome.innerHTML = formatText(`👋 <strong>Hi ${currentUser.name}!</strong>
+
+I'm <strong>Void</strong>, your AI clearance assistant.
+
+Ask me anything about clearance! 😊`);
             } else {
-                welcome.innerHTML = `👋 <strong>Hello!</strong><br><br>
-                                    I'm <strong>Void</strong>, your AI clearance assistant.<br><br>
-                                    Ask me anything about clearance! 😊`;
+                welcome.innerHTML = formatText(`👋 <strong>Hello!</strong>
+
+I'm <strong>Void</strong>, your AI clearance assistant.
+
+Ask me anything about clearance! 😊`);
             }
         }
     }, 500);

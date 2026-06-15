@@ -37,6 +37,20 @@ class StudentDashboardController extends Controller
         return null;
     }
     
+    /**
+     * Convert year level string to number
+     */
+    private function getYearNumber($yearLevel)
+    {
+        return match($yearLevel) {
+            '1st Year' => 1,
+            '2nd Year' => 2,
+            '3rd Year' => 3,
+            '4th Year' => 4,
+            default => 4,
+        };
+    }
+    
     // DASHBOARD PAGE
     public function index()
     {
@@ -51,13 +65,26 @@ class StudentDashboardController extends Controller
             $student->save();
         }
         
-        $departments = Department::where('is_active', true)->get();
+        // ✅ GAMITIN ANG BAGONG isRequiredForYear() METHOD
+        $allDepartments = Department::where('is_active', true)->get();
+        $departments = $allDepartments->filter(function($dept) use ($student) {
+            return $dept->isRequiredForYear($student->year_level);
+        });
+        
         $clearanceRequests = ClearanceRequest::where('student_id', $student->id)
             ->get()
             ->keyBy('department_id');
         
         $totalDepartments = $departments->count();
-        $approvedCount = $clearanceRequests->where('status', 'approved')->count();
+        $approvedCount = 0;
+        
+        foreach ($departments as $dept) {
+            $request = $clearanceRequests->get($dept->id);
+            if ($request && $request->status === 'approved') {
+                $approvedCount++;
+            }
+        }
+        
         $isFullyCleared = ($totalDepartments > 0 && $approvedCount == $totalDepartments);
         
         return view('student.dashboard', compact('student', 
@@ -72,22 +99,37 @@ class StudentDashboardController extends Controller
         
         $student = Auth::user();
         
+        // Ensure course_year is set
         if (!$student->course_year && $student->course && $student->year_level) {
             $student->course_year = $student->course . ' - ' . $student->year_level;
             $student->save();
         }
         
-        $departments = Department::where('is_active', true)->get();
+        // ✅ GAMITIN ANG BAGONG isRequiredForYear() METHOD
+        $allDepartments = Department::where('is_active', true)->get();
+        $departments = $allDepartments->filter(function($dept) use ($student) {
+            return $dept->isRequiredForYear($student->year_level);
+        });
+        
         $clearanceRequests = ClearanceRequest::where('student_id', $student->id)
             ->get()
             ->keyBy('department_id');
         
         $totalDepartments = $departments->count();
-        $approvedCount = $clearanceRequests->where('status', 'approved')->count();
-        $pendingCount = $clearanceRequests->where('status', 'pending')->count();
-        $rejectedCount = $clearanceRequests->where('status', 'rejected')->count();
-        $notSubmittedCount = $totalDepartments - ($approvedCount + $pendingCount + $rejectedCount);
+        $approvedCount = 0;
+        $pendingCount = 0;
+        $rejectedCount = 0;
         
+        foreach ($departments as $dept) {
+            $request = $clearanceRequests->get($dept->id);
+            if ($request) {
+                if ($request->status == 'approved') $approvedCount++;
+                elseif ($request->status == 'pending') $pendingCount++;
+                elseif ($request->status == 'rejected') $rejectedCount++;
+            }
+        }
+        
+        $notSubmittedCount = $totalDepartments - ($approvedCount + $pendingCount + $rejectedCount);
         $isFullyCleared = ($totalDepartments > 0 && $approvedCount == $totalDepartments);
         
         return view('student.clearance', compact('student', 'departments', 'clearanceRequests',

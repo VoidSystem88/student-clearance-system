@@ -85,13 +85,22 @@
                         @endif
                     </td>
                     <td class="p-3">
-                        <button onclick="openEditModal({{ $student->id }})" class="bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600 transition">
-                            <i class="fas fa-edit"></i> Edit
-                        </button>
-                        <button onclick="confirmDelete({{ $student->id }}, '{{ addslashes($student->first_name . ' ' . $student->last_name) }}')" 
-                                class="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition">
-                            <i class="fas fa-trash"></i> Delete
-                        </button>
+                        <div class="flex gap-2 flex-wrap">
+                            <button onclick="openEditModal({{ $student->id }})" class="bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600 transition">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button onclick="confirmArchive({{ $student->id }}, '{{ addslashes($student->first_name . ' ' . $student->last_name) }}')" 
+                                    class="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition">
+                                <i class="fas fa-archive"></i> Archive
+                            </button>
+                            <button onclick="confirmDelete({{ $student->id }}, '{{ addslashes($student->first_name . ' ' . $student->last_name) }}')" 
+                                    class="bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700 transition">
+                                <i class="fas fa-trash-alt"></i> Delete
+                            </button>
+                        </div>
+                        <form id="archive-form-{{ $student->id }}" method="POST" action="{{ route('admin.student.archive', $student->id) }}" class="hidden">
+                            @csrf
+                        </form>
                         <form id="delete-form-{{ $student->id }}" method="POST" action="{{ route('admin.student.destroy', $student->id) }}" class="hidden">
                             @csrf
                             @method('DELETE')
@@ -185,6 +194,7 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     // Search and Filter Functionality
     function filterStudents() {
@@ -219,15 +229,34 @@
         filterStudents();
     });
     
-    function confirmDelete(id, name) {
+    // ============ ARCHIVE FUNCTION ============
+    function confirmArchive(id, name) {
         Swal.fire({
-            title: 'Delete Student?',
-            html: `Are you sure you want to delete <strong>${name}</strong>?<br>This action cannot be undone.`,
+            title: 'Archive Student?',
+            html: `Are you sure you want to archive <strong>${name}</strong>?<br><br>This student can be restored later.`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
             cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, delete it!',
+            confirmButtonText: 'Yes, archive',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById(`archive-form-${id}`).submit();
+            }
+        });
+    }
+    
+    // ============ PERMANENT DELETE FUNCTION ============
+    function confirmDelete(id, name) {
+        Swal.fire({
+            title: 'PERMANENTLY DELETE?',
+            html: `Are you sure you want to <strong class="text-red-600">PERMANENTLY DELETE</strong> ${name}?<br><br><span class="text-red-600">This action CANNOT be undone!</span>`,
+            icon: 'error',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, permanently delete!',
             cancelButtonText: 'Cancel'
         }).then((result) => {
             if (result.isConfirmed) {
@@ -235,7 +264,8 @@
             }
         });
     }
-
+    
+    // ============ MODAL FUNCTIONS ============
     function openAddModal() {
         document.getElementById('modalTitle').innerHTML = 'Add Student';
         document.getElementById('studentForm').action = '{{ route("admin.student.store") }}';

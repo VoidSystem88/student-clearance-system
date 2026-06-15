@@ -88,7 +88,7 @@
         <div class="border border-gray-200 rounded-xl p-5 bg-gradient-to-br from-red-50 to-white">
             <div class="flex items-center gap-3 mb-3">
                 <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                    <i class="fas fa-skull-crosswalk text-red-600"></i>
+                    <i class="fas fa-exclamation-triangle text-red-600"></i>
                 </div>
                 <div>
                     <h4 class="font-bold text-gray-800">Full Shutdown</h4>
@@ -117,7 +117,7 @@
                     </select>
                 </div>
                 <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm w-full transition flex items-center justify-center gap-2">
-                    <i class="fas fa-skull-crosswalk"></i> Enable Full Shutdown
+                    <i class="fas fa-exclamation-triangle"></i> Enable Full Shutdown
                 </button>
             </form>
         </div>
@@ -135,7 +135,7 @@
                 <div class="border-l-4 {{ $log->mode === 'full' ? 'border-red-400 bg-red-50' : 'border-yellow-400 bg-yellow-50' }} p-3 rounded-r-lg shadow-sm">
                     <div class="flex justify-between items-start">
                         <span class="font-semibold {{ $log->mode === 'full' ? 'text-red-700' : 'text-yellow-700' }}">
-                            <i class="fas {{ $log->mode === 'full' ? 'fa-skull-crosswalk' : 'fa-eye-slash' }} mr-1"></i>
+                            <i class="fas {{ $log->mode === 'full' ? 'fa-exclamation-triangle' : 'fa-eye-slash' }} mr-1"></i>
                             {{ $log->mode === 'full' ? 'FULL SHUTDOWN' : 'SOFT SHUTDOWN' }}
                             @if($log->is_active)
                                 <span class="ml-2 text-xs bg-red-500 text-white px-2 py-0.5 rounded-full">ACTIVE</span>

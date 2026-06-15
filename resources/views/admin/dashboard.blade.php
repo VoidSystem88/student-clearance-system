@@ -1,342 +1,338 @@
 @extends('layouts.admin')
 
-@section('title', 'Dashboard - Admin')
+@section('title', 'Dashboard')
 @section('header', 'Admin Dashboard')
 
 @section('content')
-<!-- Stats Cards - 3 per row -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+<!-- Stats Cards - 6 important stats -->
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
     <!-- Total Students -->
-    <div class="bg-white rounded-xl shadow-sm p-4 border-l-4 border-blue-500 hover:shadow-md transition">
-        <div class="flex justify-between items-start">
+    <div class="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
+        <div class="flex items-center justify-between">
             <div>
-                <p class="text-gray-500 text-sm">Total Students</p>
-                <p class="text-2xl font-bold text-gray-800">{{ $totalStudents ?? 0 }}</p>
-                <p class="text-xs text-gray-400 mt-1">Registered accounts</p>
+                <p class="text-gray-500 text-xs">Students</p>
+                <p class="text-xl font-bold text-blue-600">{{ $totalStudents ?? 0 }}</p>
             </div>
-            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                <i class="fas fa-users text-blue-500"></i>
+            <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <i class="fas fa-users text-blue-600 text-sm"></i>
             </div>
         </div>
     </div>
 
-    <!-- Cleared Students -->
-    <div class="bg-white rounded-xl shadow-sm p-4 border-l-4 border-green-500 hover:shadow-md transition">
-        <div class="flex justify-between items-start">
+    <!-- Total Staff -->
+    <div class="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
+        <div class="flex items-center justify-between">
             <div>
-                <p class="text-gray-500 text-sm">Cleared Students</p>
-                <p class="text-2xl font-bold text-green-600">{{ $clearedStudents ?? 0 }}</p>
-                @php
-                    $clearanceRate = ($totalStudents ?? 0) > 0 ? round((($clearedStudents ?? 0) / ($totalStudents ?? 0)) * 100, 1) : 0;
-                @endphp
-                <p class="text-xs text-gray-400 mt-1">{{ $clearanceRate }}% completion rate</p>
+                <p class="text-gray-500 text-xs">Staff</p>
+                <p class="text-xl font-bold text-purple-600">{{ $totalStaff ?? 0 }}</p>
             </div>
-            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                <i class="fas fa-check-circle text-green-500"></i>
+            <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                <i class="fas fa-user-tie text-purple-600 text-sm"></i>
             </div>
         </div>
     </div>
 
     <!-- Departments -->
-    <div class="bg-white rounded-xl shadow-sm p-4 border-l-4 border-purple-500 hover:shadow-md transition">
-        <div class="flex justify-between items-start">
+    <div class="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
+        <div class="flex items-center justify-between">
             <div>
-                <p class="text-gray-500 text-sm">Departments</p>
-                <p class="text-2xl font-bold text-gray-800">{{ $totalDepartments ?? 0 }}</p>
-                <p class="text-xs text-gray-400 mt-1">Active departments</p>
+                <p class="text-gray-500 text-xs">Depts</p>
+                <p class="text-xl font-bold text-green-600">{{ $totalDepartments ?? 0 }}</p>
             </div>
-            <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                <i class="fas fa-building text-purple-500"></i>
+            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                <i class="fas fa-building text-green-600 text-sm"></i>
             </div>
         </div>
     </div>
 
     <!-- Total Requests -->
-    <div class="bg-white rounded-xl shadow-sm p-4 border-l-4 border-orange-500 hover:shadow-md transition">
-        <div class="flex justify-between items-start">
+    <div class="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
+        <div class="flex items-center justify-between">
             <div>
-                <p class="text-gray-500 text-sm">Total Requests</p>
-                <p class="text-2xl font-bold text-gray-800">{{ $totalRequests ?? 0 }}</p>
-                <p class="text-xs text-gray-400 mt-1">Clearance submissions</p>
+                <p class="text-gray-500 text-xs">Requests</p>
+                <p class="text-xl font-bold text-orange-600">{{ $totalRequests ?? 0 }}</p>
             </div>
-            <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                <i class="fas fa-file-alt text-orange-500"></i>
+            <div class="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                <i class="fas fa-file-alt text-orange-600 text-sm"></i>
             </div>
         </div>
     </div>
 
-    <!-- Approved Requests -->
-    <div class="bg-white rounded-xl shadow-sm p-4 border-l-4 border-green-500 hover:shadow-md transition">
-        <div class="flex justify-between items-center">
+    <!-- Pending -->
+    <div class="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
+        <div class="flex items-center justify-between">
             <div>
-                <p class="text-gray-500 text-sm">Approved Requests</p>
-                <p class="text-2xl font-bold text-green-600">{{ $approvedRequests ?? 0 }}</p>
-                <p class="text-xs text-gray-400 mt-1">Cleared applications</p>
+                <p class="text-gray-500 text-xs">Pending</p>
+                <p class="text-xl font-bold text-yellow-600">{{ $pendingRequests ?? 0 }}</p>
             </div>
-            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                <i class="fas fa-thumbs-up text-green-500"></i>
+            <div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                <i class="fas fa-clock text-yellow-600 text-sm"></i>
             </div>
         </div>
     </div>
 
-    <!-- Rejected Requests -->
-    <div class="bg-white rounded-xl shadow-sm p-4 border-l-4 border-red-500 hover:shadow-md transition">
-        <div class="flex justify-between items-center">
+    <!-- Cleared -->
+    <div class="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
+        <div class="flex items-center justify-between">
             <div>
-                <p class="text-gray-500 text-sm">Rejected Requests</p>
-                <p class="text-2xl font-bold text-red-600">{{ $rejectedRequests ?? 0 }}</p>
-                <p class="text-xs text-gray-400 mt-1">Returned applications</p>
+                <p class="text-gray-500 text-xs">Cleared</p>
+                <p class="text-xl font-bold text-emerald-600">{{ $clearedStudents ?? 0 }}</p>
             </div>
-            <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                <i class="fas fa-times-circle text-red-500"></i>
+            <div class="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
+                <i class="fas fa-check-circle text-emerald-600 text-sm"></i>
             </div>
         </div>
     </div>
 </div>
 
-<!-- ============ SECRET IP LOGS BUTTON ============ -->
-
-
-<!-- Secret IP Logs Modal -->
-<div id="secretIpModal" class="fixed inset-0 bg-black bg-opacity-95 hidden items-center justify-center z-50 p-4">
-    <div class="bg-gray-900 rounded-xl max-w-5xl w-full max-h-[85vh] overflow-hidden border border-gray-700 shadow-2xl">
-        <div class="flex justify-between items-center px-6 py-4 border-b border-gray-700 bg-gray-800">
-            <h3 class="text-xl font-bold text-white flex items-center gap-2">
-                <i class="fas fa-network-wired text-blue-400"></i>
-                Secret IP Logs
-                <span class="text-xs text-gray-400 bg-gray-700 px-2 py-1 rounded-full ml-2">Admin Only </span>
-                           
-                            <div class="flex flex-wrap gap-3 mb-6">
-    <a href="{{ url('/admin/ip-logs') }}" 
-       class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition shadow-sm">
-        <i class="fas fa-network-wired"></i> 
-        IP Logs
-    </a>
-    <a href="{{ url('/admin/visitor-tracking') }}" 
-       class="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition shadow-sm">
-        <i class="fas fa-chart-line"></i> 
-        Visitor Tracking
-    </a>
-    <a href="{{ url('/admin/sync-tracking-logs') }}" 
-       class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition shadow-sm">
-        <i class="fas fa-sync-alt"></i> 
-        Sync Logs
-    </a>
-</div>
-            </h3>
-            <button onclick="closeSecretIpModal()" class="text-gray-400 hover:text-white text-2xl transition">&times;</button>
+<!-- Quick Stats Row -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <!-- Pending -->
+    <div class="bg-gradient-to-r from-yellow-500 to-amber-600 rounded-xl p-4 text-white">
+        <div class="flex justify-between">
+            <div>
+                <p class="text-white/80 text-sm">Pending Approval</p>
+                <p class="text-3xl font-bold">{{ $pendingRequests ?? 0 }}</p>
+            </div>
+            <i class="fas fa-clock text-4xl text-white/30"></i>
         </div>
-        <div class="p-4 overflow-auto" style="max-height: calc(85vh - 70px);">
-            <div id="secretIpContent" class="text-green-400 font-mono text-sm">
-                <div class="text-center py-12">
-                    <i class="fas fa-spinner fa-spin text-3xl text-blue-400"></i>
-                    <p class="mt-3 text-gray-400">Loading IP logs...</p>
-                </div>
+    </div>
+
+    <!-- Approved -->
+    <div class="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-4 text-white">
+        <div class="flex justify-between">
+            <div>
+                <p class="text-white/80 text-sm">Approved</p>
+                <p class="text-3xl font-bold">{{ $approvedRequests ?? 0 }}</p>
             </div>
-            <div class="mt-4 flex gap-3 justify-end border-t border-gray-700 pt-4">
-                <button onclick="refreshSecretIpLogs()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition flex items-center gap-2">
-                    <i class="fas fa-sync-alt"></i> Refresh
-                </button>
-                <a href="{{ url('/admin/download-ips') }}" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm transition flex items-center gap-2">
-                    <i class="fas fa-download"></i> Download CSV
-                </a>
-                <button onclick="closeSecretIpModal()" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-sm transition flex items-center gap-2">
-                    <i class="fas fa-times"></i> Close
-                </button>
+            <i class="fas fa-check-circle text-4xl text-white/30"></i>
+        </div>
+    </div>
+
+    <!-- Rejected -->
+    <div class="bg-gradient-to-r from-red-500 to-rose-600 rounded-xl p-4 text-white">
+        <div class="flex justify-between">
+            <div>
+                <p class="text-white/80 text-sm">Rejected</p>
+                <p class="text-3xl font-bold">{{ $rejectedRequests ?? 0 }}</p>
             </div>
+            <i class="fas fa-times-circle text-4xl text-white/30"></i>
         </div>
     </div>
 </div>
 
-<!-- Cleared Students List Table -->
-<div class="bg-white rounded-xl shadow-sm overflow-hidden">
-    <div class="px-5 py-4 border-b border-gray-100 bg-gradient-to-r from-green-50 to-white">
-        <div class="flex justify-between items-center">
+<!-- Two Column Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <!-- Recent Requests Table -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="px-4 py-3 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
             <div>
-                <h3 class="font-semibold text-gray-800 flex items-center gap-2">
-                    <i class="fas fa-user-graduate text-green-600"></i>
-                    Cleared Students
+                <h3 class="font-semibold text-gray-800 text-sm">
+                    <i class="fas fa-clock text-blue-600 mr-1"></i> Recent Requests
                 </h3>
-                <p class="text-sm text-gray-500 mt-1">Students who have completed all clearance requirements</p>
             </div>
-            <a href="{{ route('admin.students') }}" class="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1">
-                View All <i class="fas fa-arrow-right text-xs"></i>
+            <a href="{{ route('admin.clearance-requests') }}" class="text-xs text-blue-600 hover:underline">View All</a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-3 py-2 text-left text-xs text-gray-500">Student</th>
+                        <th class="px-3 py-2 text-left text-xs text-gray-500">Dept</th>
+                        <th class="px-3 py-2 text-left text-xs text-gray-500">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @forelse(($clearanceRequests ?? [])->take(5) as $request)
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-3 py-2 text-xs">
+                            {{ $request->student->first_name ?? '' }} {{ $request->student->last_name ?? '' }}
+                        </td>
+                        <td class="px-3 py-2 text-xs">{{ $request->department->name ?? 'N/A' }}</td>
+                        <td class="px-3 py-2">
+                            @if($request->status == 'pending')
+                                <span class="px-2 py-0.5 rounded-full text-xs bg-yellow-100 text-yellow-700">Pending</span>
+                            @elseif($request->status == 'approved')
+                                <span class="px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700">Approved</span>
+                            @else
+                                <span class="px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-700">Rejected</span>
+                            @endif
+                        </td>
+                    </tr>
+                    @empty
+                    <tr><td colspan="3" class="px-3 py-4 text-center text-gray-400 text-xs">No requests</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="px-4 py-3 border-b border-gray-100 bg-gray-50">
+            <h3 class="font-semibold text-gray-800 text-sm">
+                <i class="fas fa-bolt text-yellow-600 mr-1"></i> Quick Actions
+            </h3>
+        </div>
+        <div class="p-3 grid grid-cols-2 gap-2">
+            <a href="{{ route('admin.students') }}" class="bg-blue-50 hover:bg-blue-100 rounded-lg p-3 text-center transition">
+                <i class="fas fa-user-plus text-blue-600 text-lg"></i>
+                <p class="text-xs text-gray-700 mt-1">Add Student</p>
+            </a>
+            <a href="{{ route('admin.staffs') }}" class="bg-purple-50 hover:bg-purple-100 rounded-lg p-3 text-center transition">
+                <i class="fas fa-user-tie text-purple-600 text-lg"></i>
+                <p class="text-xs text-gray-700 mt-1">Add Staff</p>
+            </a>
+            <a href="{{ route('admin.departments') }}" class="bg-green-50 hover:bg-green-100 rounded-lg p-3 text-center transition">
+                <i class="fas fa-building text-green-600 text-lg"></i>
+                <p class="text-xs text-gray-700 mt-1">Add Dept</p>
+            </a>
+            <a href="{{ route('admin.announcements') }}" class="bg-amber-50 hover:bg-amber-100 rounded-lg p-3 text-center transition">
+                <i class="fas fa-bullhorn text-amber-600 text-lg"></i>
+                <p class="text-xs text-gray-700 mt-1">Announce</p>
             </a>
         </div>
     </div>
-    
-    <div class="overflow-x-auto">
-        <table class="w-full">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student ID</th>
-                    <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Full Name</th>
-                    <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
-                    <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Year Level</th>
-                    <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                    <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100">
-                @php
-                    $clearedStudentsList = $students->where('is_cleared', true);
-                @endphp
-                
-                @forelse($clearedStudentsList as $student)
-                <tr class="hover:bg-gray-50 transition">
-                    <td class="px-5 py-3">
-                        <span class="text-sm font-mono text-gray-700">{{ $student->student_id }}</span>
-                    </td>
-                    <td class="px-5 py-3">
-                        <div class="flex items-center gap-2">
-                            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                                <i class="fas fa-user-check text-green-600 text-xs"></i>
-                            </div>
-                            <div>
-                                <p class="text-sm font-medium text-gray-800">{{ $student->first_name }} {{ $student->last_name }}</p>
-                                <p class="text-xs text-gray-400">ID: {{ $student->account_id ?? 'N/A' }}</p>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="px-5 py-3">
-                        <span class="text-sm text-gray-600">{{ $student->course ?? 'N/A' }}</span>
-                    </td>
-                    <td class="px-5 py-3">
-                        <span class="text-sm text-gray-600">{{ $student->year_level ?? 'N/A' }}</span>
-                    </td>
-                    <td class="px-5 py-3">
-                        <span class="text-sm text-gray-500">{{ $student->email }}</span>
-                    </td>
-                    <td class="px-5 py-3">
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            <i class="fas fa-check-circle mr-1 text-xs"></i> Cleared
-                        </span>
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="6" class="px-5 py-12 text-center">
-                        <div class="flex flex-col items-center justify-center">
-                            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-                                <i class="fas fa-user-graduate text-gray-400 text-2xl"></i>
-                            </div>
-                            <p class="text-gray-400 font-medium">No cleared students yet</p>
-                            <p class="text-xs text-gray-300 mt-1">Students will appear here once they complete all requirements</p>
-                        </div>
-                    </td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-    
-    @if($clearedStudentsList->count() > 0)
-    <div class="px-5 py-3 border-t border-gray-100 bg-gray-50">
-        <div class="flex justify-between items-center text-xs text-gray-500">
-            <span>Showing {{ $clearedStudentsList->count() }} of {{ $clearedStudents }} cleared students</span>
-            <i class="fas fa-shield-alt"></i>
-        </div>
-    </div>
-    @endif
 </div>
 
+<!-- Charts Row -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <!-- Department Chart -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="px-4 py-3 border-b border-gray-100 bg-gray-50">
+            <h3 class="font-semibold text-gray-800 text-sm">
+                <i class="fas fa-chart-bar text-blue-600 mr-1"></i> Requests by Department
+            </h3>
+        </div>
+        <div class="p-3">
+            <canvas id="departmentChart" height="200"></canvas>
+        </div>
+    </div>
+
+    <!-- Monthly Chart -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="px-4 py-3 border-b border-gray-100 bg-gray-50">
+            <h3 class="font-semibold text-gray-800 text-sm">
+                <i class="fas fa-chart-line text-green-600 mr-1"></i> Monthly Submissions
+            </h3>
+        </div>
+        <div class="p-3">
+            <canvas id="monthlyChart" height="200"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Status Chart & Activity Logs -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Status Chart -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="px-4 py-3 border-b border-gray-100 bg-gray-50">
+            <h3 class="font-semibold text-gray-800 text-sm">
+                <i class="fas fa-chart-pie text-purple-600 mr-1"></i> Overall Status
+            </h3>
+        </div>
+        <div class="p-3">
+            <canvas id="statusChart" height="180"></canvas>
+            <div class="flex justify-center gap-4 mt-2 text-xs">
+                <div class="flex items-center gap-1"><span class="w-2 h-2 bg-yellow-500 rounded-full"></span> Pending: {{ $pendingRequests ?? 0 }}</div>
+                <div class="flex items-center gap-1"><span class="w-2 h-2 bg-green-500 rounded-full"></span> Approved: {{ $approvedRequests ?? 0 }}</div>
+                <div class="flex items-center gap-1"><span class="w-2 h-2 bg-red-500 rounded-full"></span> Rejected: {{ $rejectedRequests ?? 0 }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Logs -->
+    <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="px-4 py-3 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+            <h3 class="font-semibold text-gray-800 text-sm">
+                <i class="fas fa-history text-gray-600 mr-1"></i> Recent Activities
+            </h3>
+            <a href="{{ route('admin.activity-logs') }}" class="text-xs text-blue-600 hover:underline">View All</a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-3 py-2 text-left text-xs text-gray-500">User</th>
+                        <th class="px-3 py-2 text-left text-xs text-gray-500">Action</th>
+                        <th class="px-3 py-2 text-left text-xs text-gray-500">Module</th>
+                        <th class="px-3 py-2 text-left text-xs text-gray-500">Time</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @forelse(($activityLogs ?? [])->take(8) as $log)
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-3 py-2 text-xs text-gray-600">{{ Str::limit($log->user_email ?? 'System', 20) }}</td>
+                        <td class="px-3 py-2">
+                            <span class="px-2 py-0.5 rounded-full text-xs
+                                @if($log->action == 'created') bg-green-100 text-green-700
+                                @elseif($log->action == 'updated') bg-blue-100 text-blue-700
+                                @elseif($log->action == 'deleted') bg-red-100 text-red-700
+                                @else bg-gray-100 text-gray-700 @endif">
+                                {{ $log->action }}
+                            </span>
+                        </td>
+                        <td class="px-3 py-2 text-xs text-gray-600">{{ $log->module }}</td>
+                        <td class="px-3 py-2 text-xs text-gray-400">{{ $log->created_at ? $log->created_at->diffForHumans() : 'N/A' }}</td>
+                    </td>
+                    @empty
+                    <tr><td colspan="4" class="px-3 py-4 text-center text-gray-400 text-xs">No activities</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-// ============ SECRET IP LOGS FUNCTION ============
-let secretClickCount = 0;
-let secretClickTimer = null;
-let konamiSequence = [];
-const konamiCode = ['1', '2', '7', '9', '4', '4', '1', '0', '0', '0', '5', '4'];
-// Method 1: Click 5 times on the secret button
-document.getElementById('secretIpBtn')?.addEventListener('click', function() {
-    secretClickCount++;
-    
-    // Visual feedback
-    this.style.transform = 'scale(0.9)';
-    setTimeout(() => {
-        this.style.transform = '';
-    }, 150);
-    
-    if (secretClickTimer) clearTimeout(secretClickTimer);
-    
-    if (secretClickCount >= 5) {
-        openSecretIpModal();
-        secretClickCount = 0;
+    // Department Chart
+    const deptLabels = @json($departmentsList ?? []);
+    const pendingData = @json($pendingPerDept ?? []);
+    const approvedData = @json($approvedPerDept ?? []);
+    const rejectedData = @json($rejectedPerDept ?? []);
+
+    if (document.getElementById('departmentChart')) {
+        new Chart(document.getElementById('departmentChart'), {
+            type: 'bar',
+            data: {
+                labels: deptLabels,
+                datasets: [
+                    { label: 'Pending', data: pendingData, backgroundColor: '#eab308', borderRadius: 4 },
+                    { label: 'Approved', data: approvedData, backgroundColor: '#22c55e', borderRadius: 4 },
+                    { label: 'Rejected', data: rejectedData, backgroundColor: '#ef4444', borderRadius: 4 }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: true, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+        });
     }
-    
-    secretClickTimer = setTimeout(() => {
-        secretClickCount = 0;
-    }, 2000);
-});
 
-// Method 2: Konami Code (↑ ↑ ↓ ↓ ← → ← → B A)
-document.addEventListener('keydown', function(e) {
-    konamiSequence.push(e.key);
-    if (konamiSequence.length > konamiCode.length) konamiSequence.shift();
-    
-    if (JSON.stringify(konamiSequence) === JSON.stringify(konamiCode)) {
-        openSecretIpModal();
-        konamiSequence = [];
+    // Monthly Chart
+    const months = @json($months ?? []);
+    const monthlyData = @json($monthlySubmissions ?? []);
+
+    if (document.getElementById('monthlyChart')) {
+        new Chart(document.getElementById('monthlyChart'), {
+            type: 'line',
+            data: {
+                labels: months,
+                datasets: [{ label: 'Submissions', data: monthlyData, borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.1)', tension: 0.3, fill: true, pointBackgroundColor: '#22c55e', pointRadius: 4 }]
+            },
+            options: { responsive: true, maintainAspectRatio: true, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+        });
     }
-});
 
-function openSecretIpModal() {
-    const modal = document.getElementById('secretIpModal');
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-    loadSecretIpLogs();
-    document.body.style.overflow = 'hidden';
-}
+    // Status Chart
+    const pending = {{ $pendingRequests ?? 0 }};
+    const approved = {{ $approvedRequests ?? 0 }};
+    const rejected = {{ $rejectedRequests ?? 0 }};
 
-function closeSecretIpModal() {
-    const modal = document.getElementById('secretIpModal');
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
-    document.body.style.overflow = '';
-}
-
-function loadSecretIpLogs() {
-    const content = document.getElementById('secretIpContent');
-    content.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-3xl text-blue-400"></i><p class="mt-3 text-gray-400">Loading IP logs...</p></div>';
-    
-    fetch('{{ url("/admin/ip-logs") }}', {
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-    .then(response => response.text())
-    .then(html => {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        const preElements = doc.querySelectorAll('pre');
-        
-        if (preElements.length > 0) {
-            let logsHtml = '';
-            preElements.forEach(pre => {
-                logsHtml += pre.outerHTML;
-            });
-            content.innerHTML = logsHtml;
-        } else {
-            content.innerHTML = '<div class="text-yellow-400 text-center py-12"><i class="fas fa-inbox text-4xl mb-3"></i><p>No IP logs yet.</p><p class="text-sm mt-2">Visit <code class="bg-gray-800 px-2 py-1 rounded">/my-ip</code> to generate logs.</p></div>';
-        }
-    })
-    .catch(err => {
-        content.innerHTML = '<div class="text-red-400 text-center py-12"><i class="fas fa-exclamation-triangle text-4xl mb-3"></i><p>Error loading logs: ' + err.message + '</p></div>';
-    });
-}
-
-function refreshSecretIpLogs() {
-    loadSecretIpLogs();
-}
+    if (document.getElementById('statusChart')) {
+        new Chart(document.getElementById('statusChart'), {
+            type: 'doughnut',
+            data: { labels: ['Pending', 'Approved', 'Rejected'], datasets: [{ data: [pending, approved, rejected], backgroundColor: ['#eab308', '#22c55e', '#ef4444'], borderWidth: 0 }] },
+            options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } } }
+        });
+    }
 </script>
-
-<style>
-    /* Pulse animation for secret button indicator */
-    @keyframes pulse {
-        0%, 100% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0.5; transform: scale(1.2); }
-    }
-    .animate-pulse {
-        animation: pulse 1.5s infinite;
-    }
-</style>
 @endsection

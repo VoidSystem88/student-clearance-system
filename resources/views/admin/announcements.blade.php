@@ -44,11 +44,11 @@
                     <td class="p-3">{{ $ann->id }}</td>
                     <td class="p-3 font-semibold">{{ $ann->title }}</td>
                     <td class="p-3">
-                        <span class="px-2 py-1 rounded text-xs 
-                            {{ $ann->type == 'info' ? 'bg-blue-500 text-white' : '' }}
-                            {{ $ann->type == 'warning' ? 'bg-yellow-500 text-white' : '' }}
-                            {{ $ann->type == 'success' ? 'bg-green-500 text-white' : '' }}
-                            {{ $ann->type == 'danger' ? 'bg-red-500 text-white' : '' }}">
+                        <span class="px-2 py-1 rounded text-xs text-white
+                            {{ $ann->type == 'info' ? 'bg-blue-500' : '' }}
+                            {{ $ann->type == 'warning' ? 'bg-yellow-500' : '' }}
+                            {{ $ann->type == 'success' ? 'bg-green-500' : '' }}
+                            {{ $ann->type == 'danger' ? 'bg-red-500' : '' }}">
                             <i class="fas 
                                 {{ $ann->type == 'info' ? 'fa-info-circle' : '' }}
                                 {{ $ann->type == 'warning' ? 'fa-exclamation-triangle' : '' }}
@@ -120,41 +120,57 @@
 <div id="annModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
     <div class="bg-white rounded-lg p-6 w-full max-w-md">
         <div class="flex justify-between items-center mb-4">
-            <h3 id="modalTitle" class="text-xl font-bold">Add Announcement</h3>
+            <h3 id="modalTitle" class="text-xl font-bold">
+                <i class="fas fa-plus-circle text-green-600 mr-2"></i> Add Announcement
+            </h3>
             <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
         </div>
         <form id="annForm" method="POST" action="{{ route('admin.announcement.store') }}">
             @csrf
             <div class="mb-3">
-                <label class="block text-gray-700 mb-1">Title</label>
+                <label class="block text-gray-700 mb-1">
+                    <i class="fas fa-heading text-gray-500 mr-1"></i> Title
+                </label>
                 <input type="text" name="title" id="title" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
             </div>
             <div class="mb-3">
-                <label class="block text-gray-700 mb-1">Type</label>
+                <label class="block text-gray-700 mb-1">
+                    <i class="fas fa-tag text-gray-500 mr-1"></i> Type
+                </label>
                 <select name="type" id="type" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                    <option value="info">📘 Info</option>
-                    <option value="warning">⚠️ Warning</option>
-                    <option value="success">✅ Success</option>
-                    <option value="danger">🔴 Danger</option>
+                    <option value="info"><i class="fas fa-info-circle"></i> Info</option>
+                    <option value="warning"><i class="fas fa-exclamation-triangle"></i> Warning</option>
+                    <option value="success"><i class="fas fa-check-circle"></i> Success</option>
+                    <option value="danger"><i class="fas fa-times-circle"></i> Danger</option>
                 </select>
             </div>
             <div class="mb-3">
-                <label class="block text-gray-700 mb-1">Content</label>
+                <label class="block text-gray-700 mb-1">
+                    <i class="fas fa-file-alt text-gray-500 mr-1"></i> Content
+                </label>
                 <textarea name="content" id="content" rows="4" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required></textarea>
             </div>
             <div class="grid grid-cols-2 gap-3 mb-3">
                 <div>
-                    <label class="block text-gray-700 mb-1">Start Date</label>
+                    <label class="block text-gray-700 mb-1">
+                        <i class="fas fa-calendar-alt text-gray-500 mr-1"></i> Start Date
+                    </label>
                     <input type="date" name="start_date" id="start_date" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div>
-                    <label class="block text-gray-700 mb-1">End Date</label>
+                    <label class="block text-gray-700 mb-1">
+                        <i class="fas fa-calendar-check text-gray-500 mr-1"></i> End Date
+                    </label>
                     <input type="date" name="end_date" id="end_date" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
             </div>
-            <div class="flex justify-end gap-2">
-                <button type="button" onclick="closeModal()" class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400 transition">Cancel</button>
-                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Save</button>
+            <div class="flex justify-end gap-2 mt-4">
+                <button type="button" onclick="closeModal()" class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400 transition">
+                    <i class="fas fa-times mr-1"></i> Cancel
+                </button>
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+                    <i class="fas fa-save mr-1"></i> Save
+                </button>
             </div>
         </form>
     </div>
@@ -162,7 +178,7 @@
 
 <script>
     function openAddModal() {
-        document.getElementById('modalTitle').innerHTML = 'Add Announcement';
+        document.getElementById('modalTitle').innerHTML = '<i class="fas fa-plus-circle text-green-600 mr-2"></i> Add Announcement';
         document.getElementById('annForm').reset();
         document.getElementById('annModal').classList.remove('hidden');
         document.getElementById('annModal').classList.add('flex');

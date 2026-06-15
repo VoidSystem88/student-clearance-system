@@ -45,6 +45,42 @@
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.5; transform: scale(0.8); }
         }
+        
+        /* Notification Bubble Styles */
+        .nav-badge {
+            margin-left: auto;
+            background-color: #ef4444;
+            color: white;
+            font-size: 0.65rem;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 20px;
+            min-width: 20px;
+            text-align: center;
+            display: inline-block;
+            animation: bounce 0.3s ease;
+        }
+        .nav-badge.zero {
+            background-color: #9ca3af;
+        }
+        @keyframes bounce {
+            0% { transform: scale(0.8); opacity: 0; }
+            80% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        /* Sidebar menu item relative positioning */
+        .nav-item {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.25rem;
+            transition: all 0.2s;
+        }
+        .nav-item .badge-wrapper {
+            margin-left: auto;
+        }
     </style>
     @stack('styles')
 </head>
@@ -74,19 +110,26 @@
                 <i class="fas fa-tachometer-alt w-5"></i>
                 <span>Dashboard</span>
             </a>
-            <a href="{{ route('support.requests') }}" class="flex items-center gap-3 px-5 py-3 text-gray-700 hover:bg-gray-100 transition {{ request()->routeIs('support.requests') ? 'nav-active' : '' }}">
+            
+            <!-- Requests Link with Badge -->
+            <a href="{{ route('support.requests') }}" id="requestsLink" class="flex items-center gap-3 px-5 py-3 text-gray-700 hover:bg-gray-100 transition {{ request()->routeIs('support.requests') ? 'nav-active' : '' }}">
                 <i class="fas fa-ticket-alt w-5"></i>
                 <span>Requests</span>
+                <span id="requestsBadge" class="nav-badge zero ml-auto" style="display: none;">0</span>
             </a>
+            
             <a href="{{ route('support.students') }}" class="flex items-center gap-3 px-5 py-3 text-gray-700 hover:bg-gray-100 transition {{ request()->routeIs('support.students') ? 'nav-active' : '' }}">
                 <i class="fas fa-users w-5"></i>
                 <span>Manage Students</span>
             </a>
-            <a href="{{ route('support.feedbacks') }}" class="flex items-center gap-3 px-5 py-3 text-gray-700 hover:bg-gray-100 transition {{ request()->routeIs('support.feedbacks') ? 'nav-active' : '' }}">
+            
+            <!-- Feedbacks Link with Badge -->
+            <a href="{{ route('support.feedbacks') }}" id="feedbacksLink" class="flex items-center gap-3 px-5 py-3 text-gray-700 hover:bg-gray-100 transition {{ request()->routeIs('support.feedbacks') ? 'nav-active' : '' }}">
                 <i class="fas fa-star w-5"></i>
                 <span>Feedbacks</span>
+                <span id="feedbacksBadge" class="nav-badge zero ml-auto" style="display: none;">0</span>
             </a>
-                                        <!-- After Maintenance or before Logout -->
+            
             <a href="{{ route('support.profile') }}" class="flex items-center gap-3 px-5 py-3 text-gray-700 hover:bg-gray-100 transition {{ request()->routeIs('support.profile') ? 'nav-active' : '' }}">
                 <i class="fas fa-user-circle w-5"></i>
                 <span>My Profile</span>
@@ -211,6 +254,77 @@
                 overlay.classList.add('hidden');
             });
         }
+
+        // ============ NOTIFICATION BADGE FUNCTIONS ============
+        
+        // Fetch counts from server
+        async function fetchNotificationCounts() {
+            try {
+                const response = await fetch('/support/notification-counts', {
+                    method: 'GET',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateRequestsBadge(data.pending_requests);
+                    updateFeedbacksBadge(data.pending_feedbacks);
+                }
+            } catch (error) {
+                console.error('Error fetching notification counts:', error);
+            }
+        }
+        
+        // Update Requests badge
+        function updateRequestsBadge(count) {
+            const badge = document.getElementById('requestsBadge');
+            if (!badge) return;
+            
+            if (count > 0) {
+                badge.textContent = count > 99 ? '99+' : count;
+                badge.classList.remove('zero');
+                badge.style.display = 'inline-block';
+                // Add bounce animation
+                badge.style.animation = 'bounce 0.3s ease';
+                setTimeout(() => { badge.style.animation = ''; }, 300);
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+        
+        // Update Feedbacks badge
+        function updateFeedbacksBadge(count) {
+            const badge = document.getElementById('feedbacksBadge');
+            if (!badge) return;
+            
+            if (count > 0) {
+                badge.textContent = count > 99 ? '99+' : count;
+                badge.classList.remove('zero');
+                badge.style.display = 'inline-block';
+                // Add bounce animation
+                badge.style.animation = 'bounce 0.3s ease';
+                setTimeout(() => { badge.style.animation = ''; }, 300);
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+        
+        // Initial load of counts
+        fetchNotificationCounts();
+        
+        // Refresh counts every 30 seconds
+        setInterval(fetchNotificationCounts, 30000);
+        
+        // Refresh when page becomes visible again
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                fetchNotificationCounts();
+            }
+        });
 
         // Global functions
         window.dismissAnnouncement = function() {

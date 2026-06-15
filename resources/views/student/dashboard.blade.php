@@ -21,11 +21,11 @@
         $color = $notifData['color'] ?? 'blue';
         
         $colorClass = match($color) {
-            'purple' => 'border-purple-500 bg-purple-50 dark:bg-purple-900/20',
-            'yellow' => 'border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20',
-            'green' => 'border-green-500 bg-green-50 dark:bg-green-900/20',
-            'red' => 'border-red-500 bg-red-50 dark:bg-red-900/20',
-            default => 'border-blue-500 bg-blue-50 dark:bg-blue-900/20',
+            'purple' => 'border-purple-500 bg-purple-50 dark:bg-purple-900/30',
+            'yellow' => 'border-yellow-500 bg-yellow-50 dark:bg-yellow-900/30',
+            'green' => 'border-green-500 bg-green-50 dark:bg-green-900/30',
+            'red' => 'border-red-500 bg-red-50 dark:bg-red-900/30',
+            default => 'border-blue-500 bg-blue-50 dark:bg-blue-900/30',
         };
         
         $iconColor = match($color) {
@@ -37,7 +37,7 @@
         };
     @endphp
     
-    <div class="rounded-xl p-4 shadow-sm border-l-4 {{ $colorClass }} transition-all hover:shadow-md">
+    <div class="rounded-xl p-4 shadow-sm border-l-4 {{ $colorClass }} transition-all hover:shadow-md dark:border-opacity-50">
         <div class="flex items-start gap-3">
             <div class="w-10 h-10 rounded-full {{ str_replace('border-l-4', '', $colorClass) }} flex items-center justify-center flex-shrink-0">
                 <i class="fas {{ $icon }} {{ $iconColor }} text-lg"></i>
@@ -45,11 +45,11 @@
             <div class="flex-1 min-w-0">
                 <div class="flex items-center justify-between flex-wrap gap-2">
                     <h4 class="font-semibold text-gray-800 dark:text-white">{{ $notif->title }}</h4>
-                    <span class="text-xs text-gray-400">{{ $notif->created_at->diffForHumans() }}</span>
+                    <span class="text-xs text-gray-400 dark:text-gray-500">{{ $notif->created_at->diffForHumans() }}</span>
                 </div>
                 <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">{{ $notif->message }}</p>
             </div>
-            <button onclick="markAsRead({{ $notif->id }})" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition">
+            <button onclick="markAsRead({{ $notif->id }})" class="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -65,11 +65,10 @@
 </div>
 
 <!-- Welcome Card with Dynamic Message -->
-<div class="rounded-xl p-6 mb-6 text-white bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-500 dark:to-blue-950">
+<div class="rounded-xl p-6 mb-6 text-white bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-800 dark:to-blue-950">
     <div class="flex justify-between items-start flex-wrap gap-4">
         <div>
             @php
-                // Check if user is new (created within last 24 hours)
                 $isNewUser = $student->created_at && $student->created_at->diffInDays(now()) < 1;
             @endphp
             
@@ -91,7 +90,7 @@
 <!-- Stats Cards -->
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
     <!-- Student ID Card -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors duration-300">
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-gray-500 dark:text-gray-400 text-sm">Student ID</p>
@@ -104,7 +103,7 @@
     </div>
     
     <!-- Course & Year Card -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors duration-300">
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-gray-500 dark:text-gray-400 text-sm">Course & Year</p>
@@ -117,7 +116,7 @@
     </div>
     
     <!-- Progress Card -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors duration-300">
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-gray-500 dark:text-gray-400 text-sm">Progress</p>
@@ -130,7 +129,7 @@
     </div>
     
     <!-- Status Card -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors duration-300">
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-gray-500 dark:text-gray-400 text-sm">Status</p>
@@ -150,7 +149,7 @@
 </div>
 
 <!-- Progress Bar -->
-<div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors duration-300">
+<div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700">
     <div class="flex justify-between items-center mb-2 flex-wrap gap-2">
         <span class="font-semibold text-gray-700 dark:text-gray-300">Overall Clearance Progress</span>
         <span class="text-sm text-gray-500 dark:text-gray-400">{{ $approvedCount ?? 0 }} out of {{ $totalDepartments ?? 0 }} departments cleared</span>
@@ -160,7 +159,7 @@
     </div>
     @if(isset($isFullyCleared) && $isFullyCleared)
         <div class="mt-4 text-center">
-            <a href="{{ route('student.clearance.print') }}" class="inline-flex items-center gap-2 bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 transition">
+            <a href="{{ route('student.clearance.print') }}" class="inline-flex items-center gap-2 bg-green-600 dark:bg-green-700 text-white px-5 py-2 rounded-lg hover:bg-green-700 dark:hover:bg-green-800 transition">
                 <i class="fas fa-download"></i>
                 <span>Download Clearance Slip</span>
             </a>

@@ -27,7 +27,7 @@ class BackupController extends Controller
         if (Hash::check($request->password, Auth::user()->password)) {
             Session::put('backup_authenticated', true);
             Session::put('backup_authenticated_at', now());
-            return redirect()->route('admin.backup');
+            return redirect()->route('admin.backup.dashboard');
         }
         
         return redirect()->back()->with('error', 'Invalid password. Access denied.');
@@ -62,19 +62,18 @@ class BackupController extends Controller
         return view('admin.backup', compact('backups'));
     }
     
-    // Create database backup (no additional password needed since page is already protected)
+    // Create database backup
     public function create(Request $request)
     {
         try {
-            // Create backups directory if not exists
             if (!is_dir(storage_path('app/backups'))) {
                 mkdir(storage_path('app/backups'), 0777, true);
             }
             
             $backupFile = $this->backupDatabasePHP();
-            return redirect()->route('admin.backup')->with('success', 'Backup created successfully: ' . basename($backupFile));
+            return redirect()->route('admin.backup.dashboard')->with('success', 'Backup created successfully: ' . basename($backupFile));
         } catch (\Exception $e) {
-            return redirect()->route('admin.backup')->with('error', 'Backup failed: ' . $e->getMessage());
+            return redirect()->route('admin.backup.dashboard')->with('error', 'Backup failed: ' . $e->getMessage());
         }
     }
     
@@ -84,7 +83,7 @@ class BackupController extends Controller
         $filepath = storage_path('app/backups/' . $filename);
         
         if (!file_exists($filepath)) {
-            return redirect()->route('admin.backup')->with('error', 'Backup file not found');
+            return redirect()->route('admin.backup.dashboard')->with('error', 'Backup file not found');
         }
         
         return response()->download($filepath, $filename, [
@@ -98,11 +97,11 @@ class BackupController extends Controller
         $filepath = storage_path('app/backups/' . $filename);
         
         if (!file_exists($filepath)) {
-            return redirect()->route('admin.backup')->with('error', 'Backup file not found');
+            return redirect()->route('admin.backup.dashboard')->with('error', 'Backup file not found');
         }
         
         unlink($filepath);
-        return redirect()->route('admin.backup')->with('success', 'Backup file deleted successfully');
+        return redirect()->route('admin.backup.dashboard')->with('success', 'Backup file deleted successfully');
     }
     
     // Import database
@@ -148,11 +147,11 @@ class BackupController extends Controller
             $fileName = 'imported_' . date('Y-m-d_H-i-s') . '.sql';
             $file->move($importPath, $fileName);
             
-            return redirect()->route('admin.backup')->with('success', "Database imported successfully! {$successCount} queries executed.");
+            return redirect()->route('admin.backup.dashboard')->with('success', "Database imported successfully! {$successCount} queries executed.");
             
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->route('admin.backup')->with('error', 'Import failed: ' . $e->getMessage());
+            return redirect()->route('admin.backup.dashboard')->with('error', 'Import failed: ' . $e->getMessage());
         }
     }
     

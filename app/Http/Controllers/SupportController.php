@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Auth;
+
 class SupportController extends Controller
 {
     // DASHBOARD PAGE - Stats only with Bug Reports
@@ -36,14 +37,11 @@ class SupportController extends Controller
             'pendingBugReports'
         ));
     }
-        // ============ 2FA VERIFICATION METHODS ============
     
-    /**
-     * Show 2FA verification form
-     */
+    // ============ 2FA VERIFICATION METHODS ============
+    
     public function show2FAVerifyForm()
     {
-        // Check if user needs 2FA
         if (!session('2fa_user_id')) {
             return redirect('/login');
         }
@@ -57,9 +55,6 @@ class SupportController extends Controller
         return view('support.2fa-verify');
     }
     
-    /**
-     * Verify 2FA code
-     */
     public function verify2FA(Request $request)
     {
         $request->validate([
@@ -78,14 +73,11 @@ class SupportController extends Controller
             return redirect('/login')->with('error', '2FA is not enabled for this account.');
         }
         
-        // Check if code matches and not expired
         if ($user->admin_2fa_code === $request->code && now()->lessThan($user->admin_2fa_expires_at)) {
-            // Clear 2FA codes
             $user->admin_2fa_code = null;
             $user->admin_2fa_expires_at = null;
             $user->save();
             
-            // Login the user
             session()->forget('2fa_user_id');
             Auth::login($user);
             $request->session()->regenerate();
@@ -96,9 +88,6 @@ class SupportController extends Controller
         return back()->with('error', 'Invalid or expired verification code. Please try again.')->withInput();
     }
     
-    /**
-     * Resend 2FA code
-     */
     public function resend2FACode(Request $request)
     {
         $userId = session('2fa_user_id');
@@ -119,14 +108,12 @@ class SupportController extends Controller
             ]);
         }
         
-        // Generate new code
         $code = rand(100000, 999999);
         
         $user->admin_2fa_code = $code;
         $user->admin_2fa_expires_at = now()->addMinutes(5);
         $user->save();
         
-        // Send email with code
         try {
             Mail::send([], [], function($message) use ($user, $code) {
                 $message->to($user->email)
@@ -165,6 +152,7 @@ class SupportController extends Controller
             'message' => 'New verification code sent to your email.'
         ]);
     }
+    
     // ============ PROFILE METHODS ============
 
     public function profile()
@@ -219,7 +207,6 @@ class SupportController extends Controller
             'admin_2fa_expires_at' => now()->addMinutes(10),
         ]);
         
-        // Send test OTP
         try {
             Mail::send([], [], function($message) use ($user, $code) {
                 $message->to($user->email)
@@ -253,10 +240,16 @@ class SupportController extends Controller
     }
     
     public function studentsPage()
-    {
-        $students = User::where('role', 'student')->orderBy('created_at', 'desc')->get();
-        return view('support.students', compact('students'));
-    }
+{
+    $students = User::where('role', 'student')->orderBy('created_at', 'desc')->get();
+    
+    // ✅ Kunin ang lahat ng active courses para sa dropdown
+    $courses = \App\Models\Course::where('is_active', true)
+        ->orderBy('code')
+        ->get();
+    
+    return view('support.students', compact('students', 'courses'));
+}
     
     public function feedbacksPage()
     {
@@ -365,18 +358,25 @@ class SupportController extends Controller
     }
     
     public function editStudent($id)
-    {
-        $student = User::where('id', $id)->where('role', 'student')->firstOrFail();
-        return response()->json([
-            'id' => $student->id,
-            'first_name' => $student->first_name,
-            'last_name' => $student->last_name,
-            'email' => $student->email,
-            'course' => $student->course,
-            'year_level' => $student->year_level,
-            'course_year' => $student->course_year ?? ($student->course . ' - ' . $student->year_level),
-        ]);
-    }
+{
+    $student = User::where('id', $id)->where('role', 'student')->firstOrFail();
+    
+    // Kunin ang mga active courses para sa dropdown
+    $courses = \App\Models\Course::where('is_active', true)
+        ->orderBy('code')
+        ->get();
+    
+    return response()->json([
+        'id' => $student->id,
+        'first_name' => $student->first_name,
+        'last_name' => $student->last_name,
+        'email' => $student->email,
+        'course' => $student->course,
+        'year_level' => $student->year_level,
+        'course_year' => $student->course_year ?? ($student->course . ' - ' . $student->year_level),
+        'courses' => $courses,  // ✅ IDAGDAG ITO
+    ]);
+}
     
     public function updateStudent(Request $request, $id)
     {
@@ -412,6 +412,7 @@ class SupportController extends Controller
         return redirect()->route('support.students')->with('success', "Student updated successfully!");
     }
     
+    // ============ UPDATE STATUS WITH EMAIL NOTIFICATION ============
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
@@ -420,11 +421,49 @@ class SupportController extends Controller
         ]);
         
         $supportRequest = SupportRequest::findOrFail($id);
+        $oldStatus = $supportRequest->status; // ✅ I-define muna ang oldStatus
+        
         $supportRequest->update([
             'status' => $request->status,
             'admin_notes' => $request->admin_notes,
             'resolved_at' => $request->status == 'resolved' ? now() : null,
         ]);
+        
+        // ============ SEND EMAIL TO STUDENT ============
+        if ($oldStatus != $request->status) {
+            try {
+                // Check if email template exists, if not use fallback
+                $viewExists = view()->exists('emails.assistance-response');
+                
+                if ($viewExists) {
+                    Mail::send('emails.assistance-response', [
+                        'student' => $supportRequest->student,
+                        'request' => $supportRequest,
+                        'admin_notes' => $request->admin_notes ?? 'No additional notes provided.'
+                    ], function($message) use ($supportRequest) {
+                        $subject = match($supportRequest->status) {
+                            'resolved' => '✅ Your Assistance Request Has Been Resolved',
+                            'in_progress' => '🔄 Your Assistance Request Is Now In Progress',
+                            'cancelled' => '❌ Your Assistance Request Has Been Cancelled',
+                            default => '📋 Your Assistance Request Has Been Updated'
+                        };
+                        $message->to($supportRequest->student->email)
+                                ->subject($subject . ' - Void Clearance System');
+                    });
+                } else {
+                    // Fallback email
+                    Mail::raw("Your assistance request (#{$supportRequest->id}) status has been updated to: {$request->status}\n\nAdmin notes: " . ($request->admin_notes ?? 'None'), function($message) use ($supportRequest) {
+                        $message->to($supportRequest->student->email)
+                                ->subject('Assistance Request Update - Void Clearance System');
+                    });
+                }
+                
+                Log::info('Assistance request status email sent to: ' . $supportRequest->student->email);
+            } catch (\Exception $e) {
+                Log::error('Failed to send assistance request email: ' . $e->getMessage());
+            }
+        }
+        // ===============================================
         
         return redirect()->route('support.requests')->with('success', 'Request status updated');
     }
@@ -472,6 +511,7 @@ class SupportController extends Controller
         return redirect()->route('support.students')->with('success', "Student account {$status} successfully!");
     }
     
+    // ============ RESPOND FEEDBACK WITH EMAIL NOTIFICATION ============
     public function respondFeedback(Request $request, $id)
     {
         $feedback = Feedback::findOrFail($id);
@@ -479,6 +519,34 @@ class SupportController extends Controller
             'admin_response' => $request->admin_response,
             'status' => 'reviewed',
         ]);
+        
+        // ============ SEND EMAIL TO STUDENT ============
+        try {
+            // Check if email template exists
+            $viewExists = view()->exists('emails.feedback-response');
+            
+            if ($viewExists && $feedback->user) {
+                Mail::send('emails.feedback-response', [
+                    'student' => $feedback->user,
+                    'feedback' => $feedback,
+                    'admin_response' => $request->admin_response
+                ], function($message) use ($feedback) {
+                    $message->to($feedback->user->email)
+                            ->subject('📝 Feedback Response - Void Clearance System');
+                });
+            } else {
+                // Fallback email
+                Mail::raw("Your feedback has been reviewed.\n\nAdmin Response: " . $request->admin_response . "\n\nThank you for helping us improve the system.", function($message) use ($feedback) {
+                    $message->to($feedback->user->email)
+                            ->subject('Feedback Response - Void Clearance System');
+                });
+            }
+            
+            Log::info('Feedback response email sent to: ' . ($feedback->user->email ?? 'unknown'));
+        } catch (\Exception $e) {
+            Log::error('Failed to send feedback response email: ' . $e->getMessage());
+        }
+        // ===============================================
         
         return redirect()->route('support.feedbacks')->with('success', 'Response sent successfully!');
     }
@@ -566,7 +634,6 @@ class SupportController extends Controller
     
     public function maintenance()
     {
-        // SUPPORT ONLY
         if (auth()->user()->role !== 'support') {
             abort(403, 'Unauthorized access. Only Support can access maintenance page.');
         }
@@ -597,9 +664,8 @@ class SupportController extends Controller
     
     public function enableSoftShutdown(Request $request)
     {
-        // SUPPORT ONLY
         if (auth()->user()->role !== 'support') {
-            return response()->json(['error' => 'Unauthorized. Only Support can enable this feature.'], 403);
+            return response()->json(['error' => 'Unauthorized'], 403);
         }
         
         $request->validate([
@@ -640,9 +706,8 @@ class SupportController extends Controller
     
     public function enableFullShutdown(Request $request)
     {
-        // SUPPORT ONLY
         if (auth()->user()->role !== 'support') {
-            return response()->json(['error' => 'Unauthorized. Only Support can enable full shutdown.'], 403);
+            return response()->json(['error' => 'Unauthorized'], 403);
         }
         
         $request->validate([
@@ -683,7 +748,6 @@ class SupportController extends Controller
     
     public function disableMaintenance(Request $request)
     {
-        // SUPPORT ONLY
         if (auth()->user()->role !== 'support') {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
@@ -723,9 +787,6 @@ class SupportController extends Controller
         ]);
     }
     
-    /**
-     * Clear maintenance authentication
-     */
     public function clearMaintenanceAuth(Request $request)
     {
         $request->session()->forget('maintenance_authenticated');
@@ -737,7 +798,7 @@ class SupportController extends Controller
     {
         $users = User::whereIn('role', ['student', 'staff', 'admin', 'support'])->get();
         $modeText = $mode === 'full' ? 'FULL SYSTEM SHUTDOWN' : 'READ-ONLY MAINTENANCE';
-        $icon = $mode === 'full' ? '🔴' : '🟡';
+        $icon = $mode === 'full' ? '⚠️' : '🚧';
         
         foreach ($users as $user) {
             try {
@@ -764,4 +825,56 @@ class SupportController extends Controller
             }
         }
     }
+    public function bulkYearUpdate(Request $request)
+{
+    $request->validate([
+        'selection_type' => 'required|in:all,by_course,selected',
+        'from_year' => 'required|string',
+        'to_year' => 'required|string',
+        'course' => 'nullable|string',
+        'student_ids' => 'nullable|array',
+    ]);
+    
+    $query = User::where('role', 'student')
+        ->where('year_level', $request->from_year);
+    
+    if ($request->selection_type === 'by_course' && $request->course) {
+        $query->where('course', $request->course);
+    }
+    
+    if ($request->selection_type === 'selected' && $request->student_ids) {
+        $query->whereIn('id', $request->student_ids);
+    }
+    
+    $students = $query->get();
+    $count = $students->count();
+    
+    if ($count === 0) {
+        return redirect()->back()->with('error', 'No students found to update.');
+    }
+    
+    foreach ($students as $student) {
+        $student->update([
+            'year_level' => $request->to_year,
+            'course_year' => $student->course . ' - ' . $request->to_year,
+        ]);
+        
+        // Kung nag-graduate na, i-reset ang clearance status para fresh start
+        if ($request->to_year === 'Graduated') {
+            $student->update(['is_cleared' => false]);
+            \App\Models\ClearanceRequest::where('student_id', $student->id)->delete();
+        }
+    }
+    
+    \App\Models\ActivityLog::create([
+        'user_id' => auth()->id(),
+        'user_email' => auth()->user()->email,
+        'action' => 'bulk_year_update',
+        'module' => 'Student',
+        'description' => "Updated {$count} students from {$request->from_year} to {$request->to_year}",
+        'ip_address' => request()->ip(),
+    ]);
+    
+    return redirect()->route('support.students')->with('success', "✅ {$count} students updated from {$request->from_year} to {$request->to_year}");
+}
 }

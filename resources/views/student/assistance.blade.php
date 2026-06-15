@@ -36,7 +36,7 @@
                     <form method="POST" action="{{ route('student.assistance.store') }}" enctype="multipart/form-data" id="assistanceForm">
                         @csrf
                         
-                        <!-- Custom Dropdown with Icons -->
+                        <!-- Request Type Dropdown -->
                         <div class="mb-4">
                             <label class="block text-gray-700 dark:text-gray-300 text-sm font-medium mb-1">Request Type <span class="text-red-500">*</span></label>
                             <div class="relative">
@@ -79,71 +79,77 @@
                             <input type="hidden" name="request_type" id="request_type" required>
                         </div>
                         
+                        <!-- Description -->
                         <div class="mb-4">
                             <label class="block text-gray-700 dark:text-gray-300 text-sm font-medium mb-1">Description <span class="text-red-500">*</span></label>
-                            <textarea name="description" rows="4" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" placeholder="Please provide detailed information about your concern..." required></textarea>
+                            <textarea name="description" id="description" rows="4" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" placeholder="Please provide detailed information about your concern..." required></textarea>
                             <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                 <i class="fas fa-info-circle mr-1"></i> Minimum 10 characters. Include any relevant details.
                             </p>
                         </div>
                         
                         <!-- File Upload -->
-<div class="mb-4">
-    <label class="block text-gray-700 dark:text-gray-300 text-sm font-medium mb-1">
-        <i class="fas fa-paperclip mr-1"></i> Attachment (Optional)
-    </label>
-    
-    <!-- Custom File Upload Design -->
-    <div class="relative">
-        <input type="file" name="attachment" id="attachment" 
-               class="hidden"
-               accept=".jpg,.jpeg,.png,.gif,.pdf"
-               onchange="validateFileSize(this)">
-        
-        <div id="fileUploadArea" 
-             class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center cursor-pointer hover:border-blue-500 dark:hover:border-blue-400 transition-all duration-200 bg-gray-50 dark:bg-gray-700/50">
-            <div class="flex flex-col items-center justify-center gap-2">
-                <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 dark:text-gray-500"></i>
-                <p class="text-sm text-gray-600 dark:text-gray-400">
-                    <span class="font-medium text-blue-600 dark:text-blue-400">Click to upload</span> or drag and drop
-                </p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">
-                    JPG, PNG, GIF, PDF (Max 5MB)
-                </p>
-            </div>
-        </div>
-        
-        <!-- Preview Area - Mobile Friendly -->
-        <div id="filePreviewArea" class="hidden mt-3">
-            <div class="flex items-center justify-between p-3 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-                <div class="flex items-center gap-3 flex-1 min-w-0">
-                    <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <i id="fileIcon" class="fas fa-file-alt text-blue-600 dark:text-blue-400 text-xl"></i>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p id="fileName" class="text-sm font-medium text-gray-800 dark:text-white truncate"></p>
-                        <p id="fileSize" class="text-xs text-gray-500 dark:text-gray-400"></p>
-                    </div>
+                        <div class="mb-4">
+                            <label class="block text-gray-700 dark:text-gray-300 text-sm font-medium mb-1">
+                                <i class="fas fa-paperclip mr-1"></i> Attachment (Optional)
+                            </label>
+                            <div class="relative">
+                                <input type="file" name="attachment" id="attachment" 
+                                       class="hidden"
+                                       accept=".jpg,.jpeg,.png,.gif,.pdf">
+                                
+                                <div id="fileUploadArea" 
+                                     class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center cursor-pointer hover:border-blue-500 dark:hover:border-blue-400 transition-all duration-200 bg-gray-50 dark:bg-gray-700/50">
+                                    <div class="flex flex-col items-center justify-center gap-2">
+                                        <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 dark:text-gray-500"></i>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400">
+                                            <span class="font-medium text-blue-600 dark:text-blue-400">Click to upload</span> or drag and drop
+                                        </p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                                            JPG, PNG, GIF, PDF (Max 5MB)
+                                        </p>
+                                    </div>
+                                </div>
+                                
+                                <div id="filePreviewArea" class="hidden mt-3">
+                                    <div class="flex items-center justify-between p-3 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                                        <div class="flex items-center gap-3 flex-1 min-w-0">
+                                            <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center flex-shrink-0">
+                                                <i id="fileIcon" class="fas fa-file-alt text-blue-600 dark:text-blue-400 text-xl"></i>
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <p id="fileName" class="text-sm font-medium text-gray-800 dark:text-white truncate"></p>
+                                                <p id="fileSize" class="text-xs text-gray-500 dark:text-gray-400"></p>
+                                            </div>
+                                        </div>
+                                        <button type="button" id="removeFileBtn" 
+                                                class="flex-shrink-0 w-10 h-10 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-all duration-200 shadow-lg ml-3 active:scale-95"
+                                                title="Remove file">
+                                            <i class="fas fa-times text-base"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="fileSizeWarning" class="hidden text-red-500 text-xs mt-2">
+                                <i class="fas fa-exclamation-triangle mr-1"></i> <span></span>
+                            </div>
+                        </div>
+                        
+                        <!-- Submit Button - FULL WIDTH ON MOBILE, CENTERED ON DESKTOP -->
+                        <div class="submit-button-container">
+                            <button type="submit" id="submitBtn" 
+                                class="submit-btn w-full md:w-auto md:px-8 py-2 rounded-lg text-sm font-medium transition-all duration-200 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                                <i class="fas fa-paper-plane"></i> 
+                                <span id="submitBtnText">Submit Request</span>
+                                <span id="submitBtnSpinner" class="hidden"><i class="fas fa-spinner fa-spin"></i></span>
+                            </button>
+                        </div>
+                    </form>
                 </div>
-                <button type="button" id="removeFileBtn" 
-                        class="flex-shrink-0 w-10 h-10 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-all duration-200 shadow-lg ml-3 active:scale-95"
-                        title="Remove file">
-                    <i class="fas fa-times text-base"></i>
-                </button>
             </div>
         </div>
-    </div>
-    
-    <div id="fileSizeWarning" class="hidden text-red-500 text-xs mt-2">
-        <i class="fas fa-exclamation-triangle mr-1"></i> <span></span>
-    </div>
-</div>
         
         <!-- Recent Requests -->
-         <button type="submit" id="submitBtn" 
-        class="px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-700">
-         <i class="fas fa-paper-plane mr-2"></i> Submit Request
-         </button>
         <div class="lg:col-span-1">
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden sticky top-20">
                 <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
@@ -208,8 +214,6 @@
                         <p>No requests yet</p>
                         <p class="text-xs mt-1">Submit your first request above</p>
                     </div>
-                                
-
                     @endforelse
                 </div>
             </div>
@@ -217,8 +221,53 @@
     </div>
 </div>
 
+<style>
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    
+    #requestTypeDropdown {
+        transition: all 0.2s ease;
+    }
+    
+    .dropdown-item {
+        transition: all 0.2s ease;
+    }
+    
+    /* Submit Button Styles - Full width on mobile, auto on desktop */
+    .submit-button-container {
+        margin-top: 1rem;
+        display: flex;
+        justify-content: center;
+    }
+    
+    .submit-btn {
+        min-width: 160px;
+    }
+    
+    @media (max-width: 768px) {
+        .submit-button-container {
+            width: 100%;
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 10px 16px;
+        }
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    .fa-spin {
+        animation: spin 1s linear infinite;
+    }
+</style>
+
 <script>
-    // ============ CUSTOM DROPDOWN FUNCTIONALITY ============
+    // ============ REQUEST TYPE DROPDOWN ============
     const requestTypeButton = document.getElementById('requestTypeButton');
     const requestTypeDropdown = document.getElementById('requestTypeDropdown');
     const selectedRequestType = document.getElementById('selectedRequestType');
@@ -237,218 +286,178 @@
             const icon = this.querySelector('i').cloneNode(true);
             const text = this.querySelector('span').textContent;
             
-            // Clear and update selected display
             selectedRequestType.innerHTML = '';
             selectedRequestType.appendChild(icon);
             selectedRequestType.appendChild(document.createTextNode(' ' + text));
             
-            // Set hidden input value
             requestTypeInput.value = value;
-            
-            // Hide dropdown
             requestTypeDropdown.classList.add('hidden');
             
-            // Remove active class from all items
             document.querySelectorAll('.dropdown-item').forEach(i => {
                 i.classList.remove('bg-blue-50', 'dark:bg-blue-900/30');
             });
-            
-            // Add active class to selected item
             this.classList.add('bg-blue-50', 'dark:bg-blue-900/30');
         });
     });
 
-    // Close dropdown when clicking outside
     document.addEventListener('click', function(e) {
-        if (requestTypeButton && requestTypeDropdown) {
-            if (!requestTypeButton.contains(e.target) && !requestTypeDropdown.contains(e.target)) {
-                requestTypeDropdown.classList.add('hidden');
-            }
+        if (requestTypeButton && requestTypeDropdown && !requestTypeButton.contains(e.target) && !requestTypeDropdown.contains(e.target)) {
+            requestTypeDropdown.classList.add('hidden');
         }
     });
 
-    // ============ FILE SIZE VALIDATION ============
-    function validateFileSize(input) {
-        const file = input.files[0];
-        const warningDiv = document.getElementById('fileSizeWarning');
-        const maxSize = 5 * 1024 * 1024; // 5MB
-        
-        if (file && file.size > maxSize) {
-            const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
-            const warningSpan = warningDiv.querySelector('span');
-            if (warningSpan) {
-                warningSpan.innerHTML = 'File too large: ' + fileSizeMB + 'MB. Maximum is 5MB.';
-            }
-            warningDiv.classList.remove('hidden');
-            input.value = '';
-            return false;
+    // ============ TOAST FUNCTION ============
+    function showToastMessage(message, type) {
+        if (typeof window.showToast === 'function') {
+            window.showToast(message, type);
         } else {
-            warningDiv.classList.add('hidden');
-            if (file) {
-                const fileSizeKB = (file.size / 1024).toFixed(2);
-                if (typeof showToast === 'function') {
-                    showToast('File ready: ' + fileSizeKB + ' KB', 'success');
-                } else {
-                    alert('File ready: ' + fileSizeKB + ' KB');
-                }
-            }
-            return true;
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-5 right-5 z-50 px-4 py-2 rounded-lg text-white text-sm ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+            toast.innerHTML = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
         }
     }
-    
-    // Form submit validation
-    const assistanceForm = document.getElementById('assistanceForm');
-    if (assistanceForm) {
-        assistanceForm.addEventListener('submit', function(e) {
-            const requestType = document.getElementById('request_type').value;
-            if (!requestType) {
-                e.preventDefault();
-                alert('Please select a request type.');
-                return false;
-            }
-            
-            const description = document.querySelector('textarea[name="description"]').value.trim();
-            if (description.length < 10) {
-                e.preventDefault();
-                alert('Please provide a detailed description (minimum 10 characters).');
-                return false;
-            }
-            
-            const fileInput = document.getElementById('attachment');
-            if (fileInput.files && fileInput.files.length > 0) {
-                const file = fileInput.files[0];
-                if (file.size > 5 * 1024 * 1024) {
-                    e.preventDefault();
-                    if (typeof showToast === 'function') {
-                        showToast('File too large. Maximum 5MB.', 'error');
-                    } else {
-                        alert('File too large. Maximum 5MB.');
-                    }
-                }
+
+    // ============ FILE UPLOAD HANDLING ============
+    const fileUploadArea = document.getElementById('fileUploadArea');
+    const fileInput = document.getElementById('attachment');
+    const filePreviewArea = document.getElementById('filePreviewArea');
+    const fileNameSpan = document.getElementById('fileName');
+    const fileSizeSpan = document.getElementById('fileSize');
+    const removeFileBtn = document.getElementById('removeFileBtn');
+    const fileIcon = document.getElementById('fileIcon');
+    const fileSizeWarning = document.getElementById('fileSizeWarning');
+    const maxSize = 5 * 1024 * 1024;
+
+    function updateFilePreview(file) {
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'application/pdf'];
+        
+        if (!validTypes.includes(file.type)) {
+            showToastMessage('Invalid file type. Please upload JPG, PNG, GIF, or PDF only.', 'error');
+            fileInput.value = '';
+            return false;
+        }
+        
+        if (file.size > maxSize) {
+            const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            showToastMessage('File too large: ' + fileSizeMB + 'MB. Maximum is 5MB.', 'error');
+            fileInput.value = '';
+            return false;
+        }
+        
+        if (file.type.startsWith('image/')) {
+            fileIcon.className = 'fas fa-image text-blue-600 dark:text-blue-400 text-lg';
+        } else if (file.type === 'application/pdf') {
+            fileIcon.className = 'fas fa-file-pdf text-red-600 dark:text-red-400 text-lg';
+        } else {
+            fileIcon.className = 'fas fa-file-alt text-blue-600 dark:text-blue-400 text-lg';
+        }
+        
+        fileNameSpan.textContent = file.name;
+        const fileSizeKB = (file.size / 1024).toFixed(2);
+        fileSizeSpan.textContent = fileSizeKB + ' KB';
+        
+        fileUploadArea.classList.add('hidden');
+        filePreviewArea.classList.remove('hidden');
+        if (fileSizeWarning) fileSizeWarning.classList.add('hidden');
+        
+        showToastMessage('File ready: ' + fileSizeKB + ' KB', 'success');
+        return true;
+    }
+
+    if (fileUploadArea) {
+        fileUploadArea.addEventListener('click', () => fileInput.click());
+        
+        fileUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileUploadArea.classList.add('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
+        });
+        
+        fileUploadArea.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            fileUploadArea.classList.remove('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
+        });
+        
+        fileUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUploadArea.classList.remove('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                updateFilePreview(e.dataTransfer.files[0]);
             }
         });
     }
 
-// ============ CUSTOM FILE UPLOAD ============
-const fileUploadArea = document.getElementById('fileUploadArea');
-const fileInput = document.getElementById('attachment');
-const filePreviewArea = document.getElementById('filePreviewArea');
-const fileNameSpan = document.getElementById('fileName');
-const fileSizeSpan = document.getElementById('fileSize');
-const removeFileBtn = document.getElementById('removeFileBtn');
-const fileIcon = document.getElementById('fileIcon');
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files.length) {
+                updateFilePreview(this.files[0]);
+            }
+        });
+    }
 
-// Click to upload
-if (fileUploadArea) {
-    fileUploadArea.addEventListener('click', function() {
-        fileInput.click();
-    });
-}
+    if (removeFileBtn) {
+        removeFileBtn.addEventListener('click', function() {
+            fileInput.value = '';
+            filePreviewArea.classList.add('hidden');
+            fileUploadArea.classList.remove('hidden');
+            if (fileSizeWarning) fileSizeWarning.classList.add('hidden');
+        });
+    }
 
-// Drag and drop
-if (fileUploadArea) {
-    fileUploadArea.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        fileUploadArea.classList.add('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
-    });
-    
-    fileUploadArea.addEventListener('dragleave', function(e) {
-        e.preventDefault();
-        fileUploadArea.classList.remove('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
-    });
-    
-    fileUploadArea.addEventListener('drop', function(e) {
-        e.preventDefault();
-        fileUploadArea.classList.remove('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
-        
-        const files = e.dataTransfer.files;
-        if (files.length > 0) {
-            fileInput.files = files;
-            updateFilePreview(files[0]);
+    // ============ FORM VALIDATION & SUBMIT ============
+    const assistanceForm = document.getElementById('assistanceForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const submitBtnText = document.getElementById('submitBtnText');
+    const submitBtnSpinner = document.getElementById('submitBtnSpinner');
+    const descriptionField = document.getElementById('description');
+
+    function validateForm() {
+        const requestType = requestTypeInput.value;
+        if (!requestType) {
+            showToastMessage('Please select a request type.', 'error');
+            return false;
         }
-    });
-}
-
-// File input change
-if (fileInput) {
-    fileInput.addEventListener('change', function() {
-        if (this.files && this.files.length > 0) {
-            updateFilePreview(this.files[0]);
-        }
-    });
-}
-
-// Remove file
-if (removeFileBtn) {
-    removeFileBtn.addEventListener('click', function() {
-        fileInput.value = '';
-        filePreviewArea.classList.add('hidden');
-        fileUploadArea.classList.remove('hidden');
         
-        // Clear validation warning if any
-        const warningDiv = document.getElementById('fileSizeWarning');
-        if (warningDiv) warningDiv.classList.add('hidden');
-    });
-}
+        const description = descriptionField ? descriptionField.value.trim() : '';
+        if (description.length < 10) {
+            showToastMessage('Please provide a detailed description (minimum 10 characters).', 'error');
+            return false;
+        }
+        
+        if (fileInput.files && fileInput.files.length) {
+            const file = fileInput.files[0];
+            if (file.size > maxSize) {
+                showToastMessage('File too large. Maximum size is 5MB.', 'error');
+                return false;
+            }
+        }
+        
+        return true;
+    }
 
-function updateFilePreview(file) {
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'application/pdf'];
-    const maxSize = 5 * 1024 * 1024;
-    
-    if (!validTypes.includes(file.type)) {
-        showToast('Invalid file type. Please upload JPG, PNG, GIF, or PDF only.', 'error');
-        fileInput.value = '';
-        return;
+    // PREVENT DOUBLE SUBMIT
+    if (assistanceForm && submitBtn) {
+        assistanceForm.addEventListener('submit', function(e) {
+            if (submitBtn.disabled) {
+                e.preventDefault();
+                return false;
+            }
+            
+            if (!validateForm()) {
+                e.preventDefault();
+                return false;
+            }
+            
+            // Disable button and show loading
+            submitBtn.disabled = true;
+            submitBtnText.textContent = 'Submitting...';
+            submitBtnSpinner.classList.remove('hidden');
+            
+            // Allow form to submit normally - the button will stay disabled
+            // The form will redirect, so no need to re-enable
+        });
     }
-    
-    if (file.size > maxSize) {
-        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
-        showToast('File too large: ' + fileSizeMB + 'MB. Maximum is 5MB.', 'error');
-        fileInput.value = '';
-        return;
-    }
-    
-    // Update icon based on file type
-    if (file.type.startsWith('image/')) {
-        fileIcon.className = 'fas fa-image text-blue-600 dark:text-blue-400 text-lg';
-    } else if (file.type === 'application/pdf') {
-        fileIcon.className = 'fas fa-file-pdf text-red-600 dark:text-red-400 text-lg';
-    } else {
-        fileIcon.className = 'fas fa-file-alt text-blue-600 dark:text-blue-400 text-lg';
-    }
-    
-    // Update file info
-    fileNameSpan.textContent = file.name;
-    const fileSizeKB = (file.size / 1024).toFixed(2);
-    fileSizeSpan.textContent = fileSizeKB + ' KB';
-    
-    // Show preview, hide upload area
-    fileUploadArea.classList.add('hidden');
-    filePreviewArea.classList.remove('hidden');
-    
-    showToast('File ready: ' + fileSizeKB + ' KB', 'success');
-}
 </script>
-
-<style>
-    .line-clamp-2 {
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-    
-    /* Custom dropdown smooth transition */
-    #requestTypeDropdown {
-        transition: all 0.2s ease;
-    }
-    
-    .dropdown-item {
-        transition: all 0.2s ease;
-    }
-	#submitBtn{
-	right: 220px;
-	background-position: center;
-}
-</style>
 @endsection
