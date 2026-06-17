@@ -453,4 +453,146 @@ class AdminController extends Controller
         
         return redirect()->route('admin.courses')->with('success', "Course {$status} successfully!");
     }
+        // ============ REMINDERS METHODS ============
+
+    public function reminders()
+    {
+        $reminders = \App\Models\Reminder::with('creator', 'department')
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
+        
+        $departments = \App\Models\Department::where('is_active', true)->get();
+        
+        return view('admin.reminders', compact('reminders', 'departments'));
+    }
+
+    public function storeReminder(Request $request)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'message' => 'required|string',
+            'target_role' => 'required|in:staff,officer,both',
+            'department_id' => 'nullable|exists:departments,id',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+        ]);
+
+        $reminder = \App\Models\Reminder::create([
+            'title' => $request->title,
+            'message' => $request->message,
+            'target_role' => $request->target_role,
+            'department_id' => $request->department_id,
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
+            'is_active' => $request->has('is_active'),
+            'created_by' => auth()->id(),
+        ]);
+
+        \App\Models\ActivityLog::create([
+            'user_id' => auth()->id(),
+            'user_email' => auth()->user()->email,
+            'action' => 'created',
+            'module' => 'Reminder',
+            'description' => "Created reminder: {$reminder->title}",
+            'ip_address' => request()->ip(),
+        ]);
+
+        return redirect()->route('admin.reminders')->with('success', 'Reminder created successfully!');
+    }
+
+    public function editReminder($id)
+    {
+        $reminder = \App\Models\Reminder::findOrFail($id);
+        return response()->json($reminder);
+    }
+
+    public function updateReminder(Request $request, $id)
+    {
+        $reminder = \App\Models\Reminder::findOrFail($id);
+        
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'message' => 'required|string',
+            'target_role' => 'required|in:staff,officer,both',
+            'department_id' => 'nullable|exists:departments,id',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+        ]);
+
+        $reminder->update([
+            'title' => $request->title,
+            'message' => $request->message,
+            'target_role' => $request->target_role,
+            'department_id' => $request->department_id,
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
+            'is_active' => $request->has('is_active'),
+        ]);
+
+        \App\Models\ActivityLog::create([
+            'user_id' => auth()->id(),
+            'user_email' => auth()->user()->email,
+            'action' => 'updated',
+            'module' => 'Reminder',
+            'description' => "Updated reminder: {$reminder->title}",
+            'ip_address' => request()->ip(),
+        ]);
+
+        return redirect()->route('admin.reminders')->with('success', 'Reminder updated successfully!');
+    }
+
+    public function destroyReminder($id)
+    {
+        $reminder = \App\Models\Reminder::findOrFail($id);
+        $title = $reminder->title;
+        $reminder->delete();
+
+        \App\Models\ActivityLog::create([
+            'user_id' => auth()->id(),
+            'user_email' => auth()->user()->email,
+            'action' => 'deleted',
+            'module' => 'Reminder',
+            'description' => "Deleted reminder: {$title}",
+            'ip_address' => request()->ip(),
+        ]);
+
+        return redirect()->route('admin.reminders')->with('success', 'Reminder deleted successfully!');
+    }
+
+    public function toggleReminder($id)
+    {
+        $reminder = \App\Models\Reminder::findOrFail($id);
+        $reminder->update(['is_active' => !$reminder->is_active]);
+        
+        $status = $reminder->is_active ? 'activated' : 'deactivated';
+        
+        \App\Models\ActivityLog::create([
+            'user_id' => auth()->id(),
+            'user_email' => auth()->user()->email,
+            'action' => 'updated',
+            'module' => 'Reminder',
+            'description' => "{$status} reminder: {$reminder->title}",
+            'ip_address' => request()->ip(),
+        ]);
+        
+        return redirect()->route('admin.reminders')->with('success', "Reminder {$status} successfully!");
+    }
+    public function assignYearsToDepartment($departmentId, Request $request)
+{
+    // Logic para mag-assign ng year levels sa department
+    $years = $request->input('years', []);
+    
+    // Delete existing assignments
+    DepartmentYearAssignment::where('department_id', $departmentId)->delete();
+    
+    // Insert new assignments
+    foreach ($years as $year) {
+        DepartmentYearAssignment::create([
+            'department_id' => $departmentId,
+            'year_level' => $year
+        ]);
+    }
+    
+    return redirect()->back()->with('success', 'Year levels assigned successfully');
+}
 }

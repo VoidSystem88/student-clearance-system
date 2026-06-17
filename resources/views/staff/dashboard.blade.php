@@ -1,1038 +1,654 @@
-@extends('layouts.staff')
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>@yield('title', 'Staff - Clearance System')</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 10px; }
+        
+        /* Sidebar */
+        .sidebar-transition { transition: all 0.3s ease; }
+        
+        /* Dark Mode Toggle Switch - FLOATING BOTTOM RIGHT */
+        .float-dark-mode {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 999;
+        }
+        .theme-switch {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            border-radius: 50px;
+            background: #ffffff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            gap: 12px;
+            border: 1px solid #e2e8f0;
+        }
+        body.dark-mode .theme-switch {
+            background: #1e293b;
+            border-color: #475569;
+        }
+        .theme-switch:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+        }
+        .switch-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #1e293b;
+        }
+        body.dark-mode .switch-label {
+            color: #e2e8f0;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1;
+            transition: 0.4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #fbbf24;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        /* Dark Mode Styles for Staff Dashboard */
+        body.dark-mode {
+            background-color: #111827 !important;
+        }
+        
+        body.dark-mode .bg-white {
+            background-color: #1f2937 !important;
+        }
+        body.dark-mode .bg-gray-50,
+        body.dark-mode .bg-gray-100 {
+            background-color: #1f2937 !important;
+        }
+        body.dark-mode .text-gray-500,
+        body.dark-mode .text-gray-600,
+        body.dark-mode .text-gray-700,
+        body.dark-mode .text-gray-800 {
+            color: #e5e7eb !important;
+        }
+        body.dark-mode .text-gray-400 {
+            color: #9ca3af !important;
+        }
+        body.dark-mode .border-gray-100,
+        body.dark-mode .border-gray-200,
+        body.dark-mode .border-gray-300 {
+            border-color: #374151 !important;
+        }
+        body.dark-mode .bg-yellow-50 {
+            background-color: #713f12 !important;
+        }
+        body.dark-mode .bg-yellow-50 .text-yellow-800,
+        body.dark-mode .bg-yellow-50 .text-yellow-700,
+        body.dark-mode .bg-yellow-50 .text-yellow-600 {
+            color: #fde047 !important;
+        }
+        body.dark-mode .bg-blue-50 {
+            background-color: #1e3a5f !important;
+        }
+        body.dark-mode .bg-green-50 {
+            background-color: #064e3b !important;
+        }
+        body.dark-mode .bg-red-50 {
+            background-color: #7f1d1d !important;
+        }
+        body.dark-mode .bg-purple-50 {
+            background-color: #4c1d95 !important;
+        }
+        body.dark-mode table thead.bg-gray-50 th {
+            background-color: #374151 !important;
+            color: #e5e7eb !important;
+        }
+        body.dark-mode table tbody tr {
+            border-bottom-color: #374151 !important;
+        }
+        body.dark-mode table tbody tr:hover {
+            background-color: #374151 !important;
+        }
+        body.dark-mode .shadow-sm {
+            box-shadow: 0 1px 2px 0 rgba(0,0,0,0.3) !important;
+        }
+        body.dark-mode .bg-gradient-to-r {
+            background-image: none !important;
+        }
+        body.dark-mode .tab-btn.bg-gray-200 {
+            background-color: #374151 !important;
+            color: #e5e7eb !important;
+        }
+        body.dark-mode .tab-btn.bg-gray-200:hover {
+            background-color: #4b5563 !important;
+        }
+        body.dark-mode .tab-btn.active.bg-blue-600 {
+            background-color: #2563eb !important;
+            color: white !important;
+        }
+        body.dark-mode .border-b {
+            border-bottom-color: #374151 !important;
+        }
+        body.dark-mode .text-green-600 {
+            color: #4ade80 !important;
+        }
+        body.dark-mode .text-red-600 {
+            color: #f87171 !important;
+        }
+        body.dark-mode .text-yellow-600 {
+            color: #fbbf24 !important;
+        }
+        body.dark-mode .text-blue-600 {
+            color: #60a5fa !important;
+        }
+        
+        /* Main content background */
+        body.dark-mode main {
+            background-color: #111827 !important;
+        }
+        
+        body.dark-mode .min-h-screen {
+            background-color: #111827 !important;
+        }
+        
+        /* Table text colors */
+        body.dark-mode table tbody td {
+            color: #e5e7eb !important;
+        }
+        body.dark-mode table thead th {
+            color: #9ca3af !important;
+            background-color: #1f2937 !important;
+        }
+        body.dark-mode .font-semibold {
+            color: #e5e7eb !important;
+        }
+        body.dark-mode .font-mono {
+            color: #e5e7eb !important;
+        }
+        body.dark-mode .divide-y > div,
+        body.dark-mode .divide-y > tr {
+            border-bottom-color: #374151 !important;
+        }
+        
+        /* Sidebar dark mode */
+        body.dark-mode .sidebar {
+            background-color: #1f2937 !important;
+        }
+        body.dark-mode .sidebar .border-b,
+        body.dark-mode .sidebar .border-t {
+            border-color: #374151 !important;
+        }
+        body.dark-mode .sidebar .text-gray-800,
+        body.dark-mode .sidebar .text-gray-700,
+        body.dark-mode .sidebar .text-gray-500 {
+            color: #e5e7eb !important;
+        }
+        body.dark-mode .nav-link {
+            color: #e5e7eb !important;
+        }
+        body.dark-mode .nav-link:hover {
+            background-color: #374151 !important;
+        }
+        body.dark-mode .nav-active {
+            background-color: #1e3a5f !important;
+            color: #60a5fa !important;
+        }
+        
+        /* Top bar dark mode */
+        body.dark-mode .bg-white.shadow-sm {
+            background-color: #1f2937 !important;
+        }
+        body.dark-mode .text-gray-600,
+        body.dark-mode .text-gray-700 {
+            color: #e5e7eb !important;
+        }
+        
+        /* Notification dropdown dark mode */
+        body.dark-mode .notification-dropdown {
+            background: #1f2937 !important;
+            border-color: #374151 !important;
+        }
+        body.dark-mode .notification-dropdown .bg-gray-100 {
+            background-color: #1f2937 !important;
+        }
+        body.dark-mode .notification-dropdown .text-gray-800 {
+            color: #e5e7eb !important;
+        }
+        body.dark-mode .notification-dropdown .text-gray-600 {
+            color: #9ca3af !important;
+        }
+        body.dark-mode .notification-dropdown .border-gray-100,
+        body.dark-mode .notification-dropdown .border-gray-200 {
+            border-color: #374151 !important;
+        }
+        body.dark-mode .notification-dropdown .hover\:bg-gray-50:hover {
+            background-color: #374151 !important;
+        }
+        
+        /* Animation */
+        body {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        * {
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+        
+        /* Notification Dropdown */
+        .notification-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 380px;
+            max-height: 500px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2);
+            z-index: 1000;
+            overflow-y: auto;
+            display: none;
+        }
+        .notification-dropdown.show {
+            display: block;
+        }
+        
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .sidebar { 
+                transform: translateX(-100%); 
+                position: fixed; 
+                z-index: 50; 
+            }
+            .sidebar.open { 
+                transform: translateX(0); 
+            }
+            .notification-dropdown {
+                width: calc(100vw - 40px);
+                right: 20px;
+                left: auto;
+            }
+            .float-dark-mode .theme-switch {
+                padding: 8px 16px;
+            }
+            .float-dark-mode .switch-label span {
+                display: none;
+            }
+        }
+        
+        .nav-active { 
+            background-color: #e0e7ff; 
+            color: #1e40af; 
+            border-left: 4px solid #3b82f6; 
+        }
+        
+        .notification-bell {
+            position: relative;
+            cursor: pointer;
+        }
+        .notification-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ef4444;
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+        }
+        
+        /* Notification Bell Animation */
+        @keyframes ring {
+            0% { transform: rotate(0); }
+            20% { transform: rotate(15deg); }
+            40% { transform: rotate(-15deg); }
+            60% { transform: rotate(10deg); }
+            80% { transform: rotate(-10deg); }
+            100% { transform: rotate(0); }
+        }
+        .notification-ring {
+            animation: ring 0.6s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans antialiased">
 
-@section('title', 'Staff Dashboard')
-@section('header', 'Clearance Management')
+    <!-- Mobile Menu Toggle -->
+    <button id="mobileMenuBtn" class="md:hidden fixed top-4 left-4 z-50 bg-blue-600 text-white p-2 rounded-lg shadow-lg">
+        <i class="fas fa-bars text-xl"></i>
+    </button>
 
-@section('content')
-<style>
-    /* Dark mode CSS variables for dashboard */
-    :root {
-        --card-bg: #ffffff;
-        --text-primary: #1f2937;
-        --text-secondary: #6b7280;
-        --border-color: #e5e7eb;
-        --stat-blue-bg: #dbeafe;
-        --stat-blue-text: #1e40af;
-        --stat-yellow-bg: #fef3c7;
-        --stat-yellow-text: #92400e;
-        --stat-green-bg: #d1fae5;
-        --stat-green-text: #065f46;
-        --stat-red-bg: #fee2e2;
-        --stat-red-text: #991b1b;
-        --stat-purple-bg: #f3e8ff;
-        --stat-purple-text: #6b21a8;
-        --table-header-bg: #f9fafb;
-        --table-hover-bg: #f3f4f6;
-        --badge-blue-bg: #dbeafe;
-        --badge-blue-text: #1e40af;
-        --badge-green-bg: #d1fae5;
-        --badge-green-text: #065f46;
-        --badge-yellow-bg: #fef3c7;
-        --badge-yellow-text: #92400e;
-        --badge-purple-bg: #f3e8ff;
-        --badge-purple-text: #6b21a8;
-        --modal-bg: #ffffff;
-        --input-bg: #ffffff;
-        --input-border: #e5e7eb;
-    }
-
-    body.dark-mode {
-        --card-bg: #1f2937;
-        --text-primary: #f9fafb;
-        --text-secondary: #9ca3af;
-        --border-color: #374151;
-        --stat-blue-bg: #1e3a5f;
-        --stat-blue-text: #60a5fa;
-        --stat-yellow-bg: #713f12;
-        --stat-yellow-text: #fde047;
-        --stat-green-bg: #064e3b;
-        --stat-green-text: #4ade80;
-        --stat-red-bg: #7f1d1d;
-        --stat-red-text: #fca5a5;
-        --stat-purple-bg: #4c1d95;
-        --stat-purple-text: #c084fc;
-        --table-header-bg: #374151;
-        --table-hover-bg: #374151;
-        --badge-blue-bg: #1e3a5f;
-        --badge-blue-text: #93c5fd;
-        --badge-green-bg: #064e3b;
-        --badge-green-text: #86efac;
-        --badge-yellow-bg: #713f12;
-        --badge-yellow-text: #fde047;
-        --badge-purple-bg: #4c1d95;
-        --badge-purple-text: #d8b4fe;
-        --modal-bg: #1f2937;
-        --input-bg: #374151;
-        --input-border: #4b5563;
-    }
-
-    /* Stats Cards */
-    .stat-card {
-        background-color: var(--card-bg);
-        border-color: var(--border-color);
-    }
-    .stat-card .stat-label {
-        color: var(--text-secondary);
-    }
-    .stat-card .stat-value-blue { color: var(--stat-blue-text); }
-    .stat-card .stat-value-yellow { color: var(--stat-yellow-text); }
-    .stat-card .stat-value-green { color: var(--stat-green-text); }
-    .stat-card .stat-value-red { color: var(--stat-red-text); }
-    .stat-card .stat-value-purple { color: var(--stat-purple-text); }
-    .stat-icon-blue { background-color: var(--stat-blue-bg); }
-    .stat-icon-yellow { background-color: var(--stat-yellow-bg); }
-    .stat-icon-green { background-color: var(--stat-green-bg); }
-    .stat-icon-red { background-color: var(--stat-red-bg); }
-    .stat-icon-purple { background-color: var(--stat-purple-bg); }
-    .stat-icon-blue i, .stat-icon-yellow i, .stat-icon-green i, .stat-icon-red i, .stat-icon-purple i {
-        color: var(--stat-blue-text);
-    }
-
-    /* Tables */
-    .data-table {
-        background-color: var(--card-bg);
-        border-color: var(--border-color);
-    }
-    .data-table thead th {
-        background-color: var(--table-header-bg);
-        color: var(--text-secondary);
-        border-bottom-color: var(--border-color);
-    }
-    .data-table tbody td {
-        color: var(--text-primary);
-        border-bottom-color: var(--border-color);
-    }
-    .data-table tbody tr:hover td {
-        background-color: var(--table-hover-bg);
-    }
-
-    /* Badges */
-    .badge-blue { background-color: var(--badge-blue-bg); color: var(--badge-blue-text); }
-    .badge-green { background-color: var(--badge-green-bg); color: var(--badge-green-text); }
-    .badge-yellow { background-color: var(--badge-yellow-bg); color: var(--badge-yellow-text); }
-    .badge-purple { background-color: var(--badge-purple-bg); color: var(--badge-purple-text); }
-    .badge-gray { background-color: var(--border-color); color: var(--text-secondary); }
-
-    /* Tabs */
-    .tab-btn {
-        transition: all 0.2s ease;
-    }
-    .tab-btn.active {
-        background-color: #3b82f6 !important;
-        color: white !important;
-    }
-    body.dark-mode .tab-btn:not(.active) {
-        background-color: #374151 !important;
-        color: #9ca3af !important;
-    }
-    body.dark-mode .tab-btn:not(.active):hover {
-        background-color: #4b5563 !important;
-        color: #e5e7eb !important;
-    }
-
-    /* Modals */
-    .modal-content {
-        background-color: var(--modal-bg);
-    }
-    .modal-content input, .modal-content select, .modal-content textarea {
-        background-color: var(--input-bg);
-        border-color: var(--input-border);
-        color: var(--text-primary);
-    }
-
-    /* Section headers */
-    .section-header {
-        background-color: var(--table-header-bg);
-        border-bottom-color: var(--border-color);
-    }
-    .section-header h3 {
-        color: var(--text-primary);
-    }
-    
-    /* Tab panes */
-    .tab-pane {
-        display: none;
-    }
-    .tab-pane.active {
-        display: block;
-    }
-</style>
-
-<!-- Stats Cards -->
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-    <div class="stat-card rounded-xl p-4 shadow-sm border">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="stat-label text-sm">Total Students</p>
-                <p class="stat-value-blue text-2xl font-bold">{{ $totalStudents ?? 0 }}</p>
-            </div>
-            <div class="stat-icon-blue w-10 h-10 rounded-full flex items-center justify-center">
-                <i class="fas fa-users text-lg"></i>
-            </div>
-        </div>
-    </div>
-    <div class="stat-card rounded-xl p-4 shadow-sm border">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="stat-label text-sm">Pending</p>
-                <p class="stat-value-yellow text-2xl font-bold">{{ $pendingCount ?? 0 }}</p>
-            </div>
-            <div class="stat-icon-yellow w-10 h-10 rounded-full flex items-center justify-center">
-                <i class="fas fa-clock text-lg"></i>
-            </div>
-        </div>
-    </div>
-    <div class="stat-card rounded-xl p-4 shadow-sm border">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="stat-label text-sm">Approved</p>
-                <p class="stat-value-green text-2xl font-bold">{{ $approvedCount ?? 0 }}</p>
-            </div>
-            <div class="stat-icon-green w-10 h-10 rounded-full flex items-center justify-center">
-                <i class="fas fa-check-circle text-lg"></i>
-            </div>
-        </div>
-    </div>
-    <div class="stat-card rounded-xl p-4 shadow-sm border">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="stat-label text-sm">Rejected</p>
-                <p class="stat-value-red text-2xl font-bold">{{ $rejectedCount ?? 0 }}</p>
-            </div>
-            <div class="stat-icon-red w-10 h-10 rounded-full flex items-center justify-center">
-                <i class="fas fa-times-circle text-lg"></i>
-            </div>
-        </div>
-    </div>
-    <div class="stat-card rounded-xl p-4 shadow-sm border">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="stat-label text-sm">Reports</p>
-                <p class="stat-value-purple text-2xl font-bold">{{ $exportsCount ?? 0 }}</p>
-            </div>
-            <div class="stat-icon-purple w-10 h-10 rounded-full flex items-center justify-center">
-                <i class="fas fa-file-csv text-lg"></i>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Tabs Navigation -->
-<div class="mb-4">
-    <div class="border-b" style="border-color: var(--border-color);">
-        <nav class="flex gap-2 flex-wrap" aria-label="Tabs">
-            <button onclick="switchTab('queue')" id="tabQueueBtn" class="tab-btn active px-5 py-2.5 text-sm font-medium rounded-t-lg bg-blue-600 text-white transition">
-                <i class="fas fa-clock mr-2"></i> Queue <span class="ml-1">({{ $pendingCount ?? 0 }})</span>
-            </button>
-            <button onclick="switchTab('approved')" id="tabApprovedBtn" class="tab-btn px-5 py-2.5 text-sm font-medium rounded-t-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition">
-                <i class="fas fa-check-circle mr-2"></i> Approved <span class="ml-1">({{ $approvedCount ?? 0 }})</span>
-            </button>
-            <button onclick="switchTab('rejected')" id="tabRejectedBtn" class="tab-btn px-5 py-2.5 text-sm font-medium rounded-t-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition">
-                <i class="fas fa-times-circle mr-2"></i> Rejected <span class="ml-1">({{ $rejectedCount ?? 0 }})</span>
-            </button>
-            <button onclick="switchTab('requirements')" id="tabRequirementsBtn" class="tab-btn px-5 py-2.5 text-sm font-medium rounded-t-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition">
-                <i class="fas fa-list-check mr-2"></i> Requirements
-            </button>
-            <button onclick="switchTab('reports')" id="tabReportsBtn" class="tab-btn px-5 py-2.5 text-sm font-medium rounded-t-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition">
-                <i class="fas fa-chart-line mr-2"></i> Reports <span class="ml-1">({{ $exportsCount ?? 0 }})</span>
-            </button>
-            <button onclick="switchTab('verified')" id="tabVerifiedBtn" class="tab-btn px-5 py-2.5 text-sm font-medium rounded-t-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition">
-                <i class="fas fa-check-double mr-2"></i> Verified List <span class="ml-1">({{ $verifiedCount ?? 0 }})</span>
-            </button>
-        </nav>
-    </div>
-</div>
-
-<!-- ============ QUEUE TAB ============ -->
-<div id="queueTab" class="tab-pane active">
-    <div class="data-table rounded-xl shadow-sm border overflow-hidden">
-        <div class="section-header px-5 py-4 border-b">
-            <h3 class="font-semibold">
-                <i class="fas fa-clock mr-2"></i> Pending Clearance Requests
-            </h3>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full data-table">
-                <thead>
-                    <tr>
-                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Student ID</th>
-                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Name</th>
-                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Year Level</th>
-                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Submitted</th>
-                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($pendingRequests ?? [] as $request)
-                    <tr class="hover:bg-gray-50 transition">
-                        <td class="px-5 py-3 font-mono text-sm">{{ $request->student->student_id ?? 'N/A' }}</td>
-                        <td class="px-5 py-3">
-                            <div class="font-medium">{{ $request->student->first_name ?? '' }} {{ $request->student->last_name ?? '' }}</div>
-                            <div class="text-xs" style="color: var(--text-secondary);">{{ $request->student->email ?? '' }}</div>
-                        </td>
-                        <td class="px-5 py-3">
-                            <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium
-                                @if($request->student->year_level == '1st Year') badge-blue
-                                @elseif($request->student->year_level == '2nd Year') badge-green
-                                @elseif($request->student->year_level == '3rd Year') badge-yellow
-                                @else badge-purple @endif">
-                                <i class="fas fa-graduation-cap mr-1 text-xs"></i>
-                                {{ $request->student->year_level ?? 'N/A' }}
-                            </span>
-                        </td>
-                        <td class="px-5 py-3 text-sm">{{ $request->submitted_at ? $request->submitted_at->format('M d, Y') : 'N/A' }}</td>
-                        <td class="px-5 py-3">
-                            <button onclick="openApproveModal({{ $request->id }})" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm transition">
-                                <i class="fas fa-check mr-1"></i> Approve
-                            </button>
-                            <button onclick="openRejectModal({{ $request->id }})" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm transition ml-2">
-                                <i class="fas fa-times mr-1"></i> Reject
-                            </button>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="5" class="px-5 py-8 text-center" style="color: var(--text-secondary);">
-                            <i class="fas fa-inbox text-4xl mb-2 opacity-50"></i>
-                            <p>No pending requests</p>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<!-- ============ APPROVED TAB ============ -->
-<div id="approvedTab" class="tab-pane hidden">
-    <div class="data-table rounded-xl shadow-sm border overflow-hidden">
-        <div class="section-header px-5 py-4 border-b">
-            <h3 class="font-semibold">
-                <i class="fas fa-check-circle mr-2"></i> Approved Requests
-            </h3>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full data-table">
-                <thead>
-                    <tr>
-                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Student ID</th>
-                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Name</th>
-                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Year Level</th>
-                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($approvedRequests ?? [] as $request)
-                    <tr class="hover:bg-gray-50 transition">
-                        <td class="px-5 py-3 font-mono text-sm">{{ $request->student->student_id ?? 'N/A' }}</td>
-                        <td class="px-5 py-3">
-                            <div class="font-medium">{{ $request->student->first_name ?? '' }} {{ $request->student->last_name ?? '' }}</div>
-                        </td>
-                        <td class="px-5 py-3">
-                            <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium
-                                @if($request->student->year_level == '1st Year') badge-blue
-                                @elseif($request->student->year_level == '2nd Year') badge-green
-                                @elseif($request->student->year_level == '3rd Year') badge-yellow
-                                @else badge-purple @endif">
-                                <i class="fas fa-graduation-cap mr-1 text-xs"></i>
-                                {{ $request->student->year_level ?? 'N/A' }}
-                            </span>
-                        </td>
-                        <td class="px-5 py-3 text-sm">{{ $request->processed_at ? $request->processed_at->format('M d, Y') : 'N/A' }}</td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="4" class="px-5 py-8 text-center" style="color: var(--text-secondary);">
-                            <i class="fas fa-inbox text-4xl mb-2 opacity-50"></i>
-                            <p>No approved requests</p>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<!-- ============ REJECTED TAB ============ -->
-<div id="rejectedTab" class="tab-pane hidden">
-    <div class="data-table rounded-xl shadow-sm border overflow-hidden">
-        <div class="section-header px-5 py-4 border-b">
-            <h3 class="font-semibold">
-                <i class="fas fa-times-circle mr-2"></i> Rejected Requests
-            </h3>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full data-table">
-                <thead>
-                    <tr>
-                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Student ID</th>
-                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Name</th>
-                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Year Level</th>
-                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Reason</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($rejectedRequests ?? [] as $request)
-                    <tr class="hover:bg-gray-50 transition">
-                        <td class="px-5 py-3 font-mono text-sm">{{ $request->student->student_id ?? 'N/A' }}</td>
-                        <td class="px-5 py-3">
-                            <div class="font-medium">{{ $request->student->first_name ?? '' }} {{ $request->student->last_name ?? '' }}</div>
-                        </td>
-                        <td class="px-5 py-3">
-                            <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium
-                                @if($request->student->year_level == '1st Year') badge-blue
-                                @elseif($request->student->year_level == '2nd Year') badge-green
-                                @elseif($request->student->year_level == '3rd Year') badge-yellow
-                                @else badge-purple @endif">
-                                <i class="fas fa-graduation-cap mr-1 text-xs"></i>
-                                {{ $request->student->year_level ?? 'N/A' }}
-                            </span>
-                        </td>
-                        <td class="px-5 py-3 text-sm" style="color: var(--danger-text);">{{ $request->remarks ?? 'No reason' }}</td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="4" class="px-5 py-8 text-center" style="color: var(--text-secondary);">
-                            <i class="fas fa-inbox text-4xl mb-2 opacity-50"></i>
-                            <p>No rejected requests</p>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<!-- ============ REQUIREMENTS TAB ============ -->
-<div id="requirementsTab" class="tab-pane hidden">
-    <div class="data-table rounded-xl shadow-sm border overflow-hidden">
-        <div class="section-header px-5 py-4 border-b">
-            <div class="flex justify-between items-center flex-wrap gap-3">
-                <h3 class="font-semibold">
-                    <i class="fas fa-list-check mr-2"></i> Requirements by Year Level
-                </h3>
-                <div class="flex gap-2">
-                    <select id="yearLevelFilter" class="border rounded-lg px-3 py-1 text-sm" style="background-color: var(--input-bg); border-color: var(--input-border); color: var(--text-primary);" onchange="filterRequirements()">
-                        <option value="all">All Year Levels</option>
-                        @php $assignedYears = $department->getAssignedYearLevels(); @endphp
-                        @foreach($assignedYears as $year)
-                            <option value="{{ $year }}"><i class="fas fa-graduation-cap"></i> {{ $year }}</option>
-                        @endforeach
-                    </select>
-                    <button onclick="openAddRequirementModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition">
-                        <i class="fas fa-plus mr-1"></i> Add Requirement
-                    </button>
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar fixed top-0 left-0 h-full w-64 bg-white shadow-xl z-40 flex flex-col sidebar-transition">
+        <div class="p-5 border-b border-gray-200">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-building text-white text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg text-gray-800">Staff Portal</h1>
+                    <p class="text-xs text-gray-500">{{ $department->name ?? 'Department' }}</p>
                 </div>
             </div>
         </div>
-        <div class="overflow-x-auto">
-            <table class="w-full data-table">
-                <thead>
-                    <tr>
-                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Year Level</th>
-                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Requirement</th>
-                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Required</th>
-                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Status</th>
-                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="requirementsTableBody">
+
+        <nav class="flex-1 py-4 overflow-y-auto">
+            <a href="{{ route('staff.dashboard') }}" class="nav-link flex items-center gap-3 px-5 py-3 text-gray-700 hover:bg-gray-100 transition">
+                <i class="fas fa-tachometer-alt w-5"></i>
+                <span>Dashboard</span>
+            </a>
+            <div class="border-t my-3 mx-5 border-gray-200"></div>
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="flex items-center gap-3 px-5 py-3 text-red-600 hover:bg-red-50 transition w-full text-left">
+                    <i class="fas fa-sign-out-alt w-5"></i>
+                    <span>Logout</span>
+                </button>
+            </form>
+        </nav>
+
+        <div class="p-4 border-t border-gray-200 text-center text-xs text-gray-400">
+            <p>© {{ date('Y') }} Clearance System</p>
+            <p>Staff Portal</p>
+        </div>
+    </aside>
+
+    <!-- Overlay for mobile -->
+    <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden md:hidden"></div>
+
+    <!-- Main Content -->
+    <main class="md:ml-64 min-h-screen">
+        <!-- Top Bar -->
+        <div class="bg-white shadow-sm sticky top-0 z-20">
+            <div class="px-4 py-3 flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="md:hidden w-10"></div>
+                    <h2 class="text-lg font-semibold text-gray-700">@yield('header', 'Staff Dashboard')</h2>
+                </div>
+                <div class="flex items-center gap-4">
+                    <!-- ============ NOTIFICATION BELL ============ -->
                     @php
-                        $allRequirements = \App\Models\DepartmentYearRequirement::where('department_id', $department->id)
-                            ->orderBy('year_level')
-                            ->orderBy('sort_order')
+                        $user = Auth::user();
+                        $today = date('Y-m-d');
+                        
+                        // Kunin ang mga reminders para sa staff
+                        $reminders = \App\Models\Reminder::where('is_active', true)
+                            ->where('start_date', '<=', $today)
+                            ->where(function($q) use ($today) {
+                                $q->whereNull('end_date')->orWhere('end_date', '>=', $today);
+                            })
+                            ->where(function($q) use ($user) {
+                                $q->where('target_role', $user->role)
+                                  ->orWhere('target_role', 'both');
+                            })
+                            ->where(function($q) use ($user) {
+                                $q->whereNull('department_id')
+                                  ->orWhere('department_id', $user->department_id);
+                            })
+                            ->orderBy('created_at', 'desc')
                             ->get();
+                        
+                        // Kunin ang announcements
+                        $announcements = \App\Models\Announcement::where('is_active', true)
+                            ->orderBy('created_at', 'desc')
+                            ->take(5)
+                            ->get();
+                        
+                        $totalNotifications = $reminders->count() + $announcements->count();
                     @endphp
                     
-                    @forelse($allRequirements as $req)
-                    <tr class="hover:bg-gray-50 transition requirement-row" data-year="{{ $req->year_level }}">
-                        <td class="px-5 py-3">
-                            <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium
-                                @if($req->year_level == '1st Year') badge-blue
-                                @elseif($req->year_level == '2nd Year') badge-green
-                                @elseif($req->year_level == '3rd Year') badge-yellow
-                                @else badge-purple @endif">
-                                <i class="fas fa-graduation-cap mr-1 text-xs"></i>
-                                {{ $req->year_level }}
-                            </span>
-                        </td>
-                        <td class="px-5 py-3">{{ $req->requirement_name }}</td>
-                        <td class="px-5 py-3">
-                            @if($req->is_required)
-                                <span class="text-red-600 dark:text-red-400 text-sm"><i class="fas fa-exclamation-circle"></i> Required</span>
-                            @else
-                                <span class="text-gray-500 dark:text-gray-400 text-sm"><i class="fas fa-check-circle"></i> Optional</span>
+                    <div class="relative notification-bell">
+                        <button id="notificationBell" class="relative text-gray-600 hover:text-blue-600 transition-colors focus:outline-none" title="Notifications">
+                            <i class="fas fa-bell text-xl"></i>
+                            @if($totalNotifications > 0)
+                            <span class="notification-badge notification-ring">{{ $totalNotifications }}</span>
                             @endif
-                        </td>
-                        <td class="px-5 py-3">
-                            @if($req->is_active)
-                                <span class="text-green-600 dark:text-green-400 text-sm"><i class="fas fa-circle"></i> Active</span>
-                            @else
-                                <span class="text-gray-400 dark:text-gray-500 text-sm"><i class="fas fa-circle"></i> Inactive</span>
+                        </button>
+                        
+                        <!-- Notification Dropdown -->
+                        <div id="notificationDropdown" class="notification-dropdown">
+                            <div class="sticky top-0 bg-gray-100 dark:bg-gray-800 px-4 py-2 border-b border-gray-200 dark:border-gray-700 rounded-t-lg">
+                                <h3 class="font-semibold text-gray-800 dark:text-white flex items-center gap-2">
+                                    <i class="fas fa-bell text-blue-600"></i> Notifications
+                                </h3>
+                            </div>
+                            
+                            @if($reminders->count() > 0)
+                            <div class="border-b border-gray-200 dark:border-gray-700">
+                                <div class="px-4 py-2 bg-yellow-50 dark:bg-yellow-900/20">
+                                    <h4 class="text-sm font-semibold text-yellow-800 dark:text-yellow-400 flex items-center gap-1">
+                                        <i class="fas fa-bell mr-1"></i> Reminders
+                                    </h4>
+                                </div>
+                                @foreach($reminders as $reminder)
+                                <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition notification-item">
+                                    <div class="flex items-start gap-2">
+                                        <div class="text-yellow-500 mt-1 flex-shrink-0">
+                                            <i class="fas fa-clock"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-semibold text-gray-800 dark:text-white">{{ $reminder->title }}</p>
+                                            <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">{{ $reminder->message }}</p>
+                                            @if($reminder->end_date)
+                                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                                                <i class="fas fa-calendar-alt"></i> Until: {{ \Carbon\Carbon::parse($reminder->end_date)->format('M d, Y') }}
+                                            </p>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                                @endforeach
+                            </div>
                             @endif
-                        </td>
-                        <td class="px-5 py-3">
-                            <button onclick="editRequirement({{ $req->id }}, '{{ addslashes($req->requirement_name) }}', {{ $req->is_required ? 'true' : 'false' }}, {{ $req->is_active ? 'true' : 'false' }}, '{{ $req->year_level }}')" 
-                                    class="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded text-sm transition">
-                                <i class="fas fa-edit"></i> Edit
-                            </button>
-                            <button onclick="deleteRequirement({{ $req->id }}, '{{ addslashes($req->requirement_name) }}')" 
-                                    class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm transition ml-2">
-                                <i class="fas fa-trash"></i> Delete
-                            </button>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr id="noRequirementsRow">
-                        <td colspan="5" class="px-5 py-8 text-center" style="color: var(--text-secondary);">
-                            <i class="fas fa-inbox text-4xl mb-2 opacity-50"></i>
-                            <p>No requirements yet. Click "Add Requirement" to create one.</p>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<!-- ============ REPORTS TAB ============ -->
-<div id="reportsTab" class="tab-pane hidden">
-    <div class="data-table rounded-xl shadow-sm border overflow-hidden">
-        <div class="section-header px-5 py-4 border-b">
-            <h3 class="font-semibold">
-                <i class="fas fa-chart-line mr-2"></i> Generated Reports
-            </h3>
-        </div>
-        <div class="overflow-x-auto">
-            @if(isset($exports) && $exports->count() > 0)
-            <table class="w-full data-table">
-                <thead>
-                    <tr>
-                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Event Name</th>
-                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Records</th>
-                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Date</th>
-                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($exports as $export)
-                    <tr class="hover:bg-gray-50 transition">
-                        <td class="px-5 py-3">{{ $export->event_name }}</td>
-                        <td class="px-5 py-3">{{ $export->total_records }}</td>
-                        <td class="px-5 py-3 text-sm">{{ \Carbon\Carbon::parse($export->export_date)->format('M d, Y') }}</td>
-                        <td class="px-5 py-3">
-                            <button onclick="downloadReport({{ $export->id }})" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition">
-                                <i class="fas fa-download"></i> Download
-                            </button>
-                            <button onclick="importReport({{ $export->id }})" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm transition ml-2">
-                                <i class="fas fa-upload"></i> Import
-                            </button>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="4" class="px-5 py-8 text-center" style="color: var(--text-secondary);">
-                            <i class="fas fa-inbox text-4xl mb-2 opacity-50"></i>
-                            <p>No reports available</p>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-            @else
-            <div class="px-5 py-8 text-center" style="color: var(--text-secondary);">
-                <i class="fas fa-chart-line text-4xl mb-2 opacity-50"></i>
-                <p>No reports available.</p>
-                <p class="text-xs mt-2">Reports appear here when officers export verified student lists.</p>
-            </div>
-            @endif
-        </div>
-    </div>
-</div>
-
-<!-- ============ VERIFIED LIST TAB ============ -->
-<div id="verifiedTab" class="tab-pane hidden">
-    <div class="data-table rounded-xl shadow-sm border overflow-hidden">
-        <div class="section-header px-5 py-4 border-b">
-            <div class="flex justify-between items-center flex-wrap gap-3">
-                <h3 class="font-semibold">
-                    <i class="fas fa-check-double mr-2"></i> Verified Student List
-                </h3>
-                <div class="flex gap-2">
-                    <select id="verifiedYearFilter" class="border rounded-lg px-3 py-1 text-sm" style="background-color: var(--input-bg); border-color: var(--input-border); color: var(--text-primary);" onchange="filterVerifiedList()">
-                        <option value="all">All Year Levels</option>
-                        @foreach($assignedYears as $year)
-                            <option value="{{ $year }}"><i class="fas fa-graduation-cap"></i> {{ $year }}</option>
-                        @endforeach
-                    </select>
-                    <button onclick="openUploadCSVModal()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm transition">
-                        <i class="fas fa-upload mr-1"></i> Upload CSV
-                    </button>
+                            
+                            @if($announcements->count() > 0)
+                            <div>
+                                <div class="px-4 py-2 bg-blue-50 dark:bg-blue-900/20">
+                                    <h4 class="text-sm font-semibold text-blue-800 dark:text-blue-400 flex items-center gap-1">
+                                        <i class="fas fa-megaphone mr-1"></i> Announcements
+                                    </h4>
+                                </div>
+                                @foreach($announcements as $announcement)
+                                <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition notification-item">
+                                    <div class="flex items-start gap-2">
+                                        <div class="text-blue-500 mt-1 flex-shrink-0">
+                                            <i class="fas fa-bullhorn"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-semibold text-gray-800 dark:text-white">{{ $announcement->title }}</p>
+                                            <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">{{ Str::limit($announcement->content, 100) }}</p>
+                                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                                                <i class="fas fa-calendar-alt"></i> {{ $announcement->created_at->format('M d, Y') }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                @endforeach
+                            </div>
+                            @endif
+                            
+                            @if($totalNotifications == 0)
+                            <div class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                                <i class="fas fa-bell-slash text-3xl mb-2 text-gray-300 dark:text-gray-600"></i>
+                                <p class="text-sm">No new notifications</p>
+                                <p class="text-xs text-gray-400 mt-1">All caught up! 🎉</p>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                    
+                    <span class="text-sm text-gray-600 hidden sm:block">{{ Auth::user()->email ?? 'Staff' }}</span>
+                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-blue-600 text-sm"></i>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="overflow-x-auto">
-            <table class="w-full data-table">
-                <thead>
-                    <tr>
-                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Student ID</th>
-                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Name</th>
-                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Course</th>
-                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Year Level</th>
-                    </tr>
-                </thead>
-                <tbody id="verifiedTableBody">
-                    @forelse($verifiedStudents ?? [] as $verified)
-                    <tr class="hover:bg-gray-50 transition verified-row" data-year="{{ $verified['year_level'] ?? 'N/A' }}">
-                        <td class="px-5 py-3 font-mono text-sm">{{ $verified['student_id'] ?? 'N/A' }}</td>
-                        <td class="px-5 py-3">{{ $verified['student_name'] ?? 'N/A' }}</td>
-                        <td class="px-5 py-3">{{ $verified['course'] ?? 'N/A' }}</td>
-                        <td class="px-5 py-3">
-                            <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium
-                                @if(($verified['year_level'] ?? '') == '1st Year') badge-blue
-                                @elseif(($verified['year_level'] ?? '') == '2nd Year') badge-green
-                                @elseif(($verified['year_level'] ?? '') == '3rd Year') badge-yellow
-                                @else badge-purple @endif">
-                                <i class="fas fa-graduation-cap mr-1 text-xs"></i>
-                                {{ $verified['year_level'] ?? 'N/A' }}
-                            </span>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr id="noVerifiedRow">
-                        <td colspan="4" class="px-5 py-8 text-center" style="color: var(--text-secondary);">
-                            <i class="fas fa-inbox text-4xl mb-2 opacity-50"></i>
-                            <p>No verified students</p>
-                            <button onclick="openUploadCSVModal()" class="mt-2 text-blue-600 hover:underline">Upload CSV to add students</button>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
+
+        <div class="p-4 md:p-6">
+            @if(session('success'))
+                <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-3 rounded mb-4 flex justify-between items-center">
+                    <span><i class="fas fa-check-circle mr-2"></i>{{ session('success') }}</span>
+                    <button onclick="this.parentElement.remove()" class="text-green-700">&times;</button>
+                </div>
+            @endif
+            @if(session('error'))
+                <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-3 rounded mb-4 flex justify-between items-center">
+                    <span><i class="fas fa-exclamation-circle mr-2"></i>{{ session('error') }}</span>
+                    <button onclick="this.parentElement.remove()" class="text-red-700">&times;</button>
+                </div>
+            @endif
+            @yield('content')
+        </div>
+    </main>
+
+    <!-- FLOATING DARK MODE TOGGLE - BOTTOM RIGHT -->
+    <div class="float-dark-mode">
+        <div class="theme-switch" onclick="toggleDarkMode()">
+            <div class="switch-label">
+                <i class="fas fa-moon"></i>
+                <span>Dark Mode</span>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="darkModeToggle">
+                <span class="slider"></span>
+            </label>
         </div>
     </div>
-</div>
 
-<!-- ============ MODALS ============ -->
-
-<!-- Approve Modal -->
-<div id="approveModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
-    <div class="modal-content rounded-xl p-6 w-full max-w-md">
-        <h3 class="text-xl font-bold text-green-600 dark:text-green-400 mb-4">
-            <i class="fas fa-check-circle mr-2"></i> Approve Clearance
-        </h3>
-        <p id="approveMessage" class="mb-4" style="color: var(--text-secondary);"></p>
-        <div class="flex justify-end gap-2">
-            <button onclick="closeApproveModal()" class="px-4 py-2 border rounded-lg text-sm transition hover:bg-gray-100 dark:hover:bg-gray-700" style="border-color: var(--border-color); color: var(--text-primary);">Cancel</button>
-            <form id="approveForm" method="POST">
-                @csrf
-                <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 transition">Confirm Approve</button>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Reject Modal -->
-<div id="rejectModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
-    <div class="modal-content rounded-xl p-6 w-full max-w-md">
-        <h3 class="text-xl font-bold text-red-600 dark:text-red-400 mb-4">
-            <i class="fas fa-times-circle mr-2"></i> Reject Clearance
-        </h3>
-        <p id="rejectMessage" class="mb-2" style="color: var(--text-secondary);"></p>
-        <form id="rejectForm" method="POST">
-            @csrf
-            <div class="mb-4">
-                <textarea name="remarks" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-red-500" rows="3" placeholder="Reason for rejection" required style="background-color: var(--input-bg); border-color: var(--input-border); color: var(--text-primary);"></textarea>
-            </div>
-            <div class="flex justify-end gap-2">
-                <button type="button" onclick="closeRejectModal()" class="px-4 py-2 border rounded-lg text-sm transition hover:bg-gray-100 dark:hover:bg-gray-700" style="border-color: var(--border-color); color: var(--text-primary);">Cancel</button>
-                <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition">Confirm Reject</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Add Requirement Modal -->
-<div id="addRequirementModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
-    <div class="modal-content rounded-xl p-6 w-full max-w-md">
-        <h3 class="text-xl font-bold text-blue-600 dark:text-blue-400 mb-4">
-            <i class="fas fa-plus-circle mr-2"></i> Add Requirement
-        </h3>
-        <form id="addRequirementForm" method="POST" action="{{ route('staff.year-requirements.store') }}">
-            @csrf
-            <div class="mb-4">
-                <label class="block mb-2 text-sm font-medium" style="color: var(--text-primary);">Year Level <span class="text-red-500">*</span></label>
-                <select name="year_level" id="req_year_level" required class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" style="background-color: var(--input-bg); border-color: var(--input-border); color: var(--text-primary);">
-                    @foreach($assignedYears as $year)
-                        <option value="{{ $year }}"><i class="fas fa-graduation-cap"></i> {{ $year }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="mb-4">
-                <label class="block mb-2 text-sm font-medium" style="color: var(--text-primary);">Requirement Name <span class="text-red-500">*</span></label>
-                <input type="text" name="requirement_name" id="req_name" required class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" style="background-color: var(--input-bg); border-color: var(--input-border); color: var(--text-primary);" placeholder="e.g., Clearance Form, Good Moral Certificate">
-            </div>
-            <div class="mb-4">
-                <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" name="is_required" value="1" checked class="w-4 h-4">
-                    <span class="text-sm" style="color: var(--text-primary);">This requirement is <strong>required</strong></span>
-                </label>
-            </div>
-            <div class="flex justify-end gap-2">
-                <button type="button" onclick="closeAddRequirementModal()" class="px-4 py-2 border rounded-lg text-sm transition hover:bg-gray-100 dark:hover:bg-gray-700" style="border-color: var(--border-color); color: var(--text-primary);">Cancel</button>
-                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition">Add Requirement</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Edit Requirement Modal -->
-<div id="editRequirementModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
-    <div class="modal-content rounded-xl p-6 w-full max-w-md">
-        <h3 class="text-xl font-bold text-yellow-600 dark:text-yellow-400 mb-4">
-            <i class="fas fa-edit mr-2"></i> Edit Requirement
-        </h3>
-        <form id="editRequirementForm" method="POST">
-            @csrf
-            @method('PUT')
-            <div class="mb-4">
-                <label class="block mb-2 text-sm font-medium" style="color: var(--text-primary);">Year Level</label>
-                <input type="text" id="edit_year_level" disabled class="w-full border rounded-lg px-3 py-2 bg-gray-100 dark:bg-gray-600" style="color: var(--text-secondary);">
-                <input type="hidden" name="year_level" id="edit_year_level_hidden">
-            </div>
-            <div class="mb-4">
-                <label class="block mb-2 text-sm font-medium" style="color: var(--text-primary);">Requirement Name <span class="text-red-500">*</span></label>
-                <input type="text" name="requirement_name" id="edit_req_name" required class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-yellow-500" style="background-color: var(--input-bg); border-color: var(--input-border); color: var(--text-primary);">
-            </div>
-            <div class="mb-4">
-                <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" name="is_required" id="edit_is_required" value="1" class="w-4 h-4">
-                    <span class="text-sm" style="color: var(--text-primary);">This requirement is <strong>required</strong></span>
-                </label>
-            </div>
-            <div class="mb-4">
-                <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" name="is_active" id="edit_is_active" value="1" class="w-4 h-4">
-                    <span class="text-sm" style="color: var(--text-primary);">Active (visible to students)</span>
-                </label>
-            </div>
-            <div class="flex justify-end gap-2">
-                <button type="button" onclick="closeEditRequirementModal()" class="px-4 py-2 border rounded-lg text-sm transition hover:bg-gray-100 dark:hover:bg-gray-700" style="border-color: var(--border-color); color: var(--text-primary);">Cancel</button>
-                <button type="submit" class="px-4 py-2 bg-yellow-600 text-white rounded-lg text-sm hover:bg-yellow-700 transition">Update Requirement</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Upload CSV Modal -->
-<div id="uploadCSVModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
-    <div class="modal-content rounded-xl p-6 w-full max-w-md">
-        <h3 class="text-xl font-bold text-green-600 dark:text-green-400 mb-4">
-            <i class="fas fa-upload mr-2"></i> Upload CSV
-        </h3>
-        <p class="text-sm mb-4" style="color: var(--text-secondary);">
-            CSV format: <strong>Student ID, Name, Course, Year Level</strong><br>
-            <span class="text-xs opacity-75">Example: 2023-00123,Juan Dela Cruz,BSIT,1st Year</span>
-        </p>
-        <form id="uploadCSVForm" method="POST" action="{{ route('staff.verified.upload-csv') }}" enctype="multipart/form-data">
-            @csrf
-            <div class="mb-4">
-                <input type="file" name="csv_file" accept=".csv,.txt" required class="w-full border rounded-lg p-2" style="background-color: var(--input-bg); border-color: var(--input-border); color: var(--text-primary);">
-            </div>
-            <div class="flex justify-end gap-2">
-                <button type="button" onclick="closeUploadCSVModal()" class="px-4 py-2 border rounded-lg text-sm transition hover:bg-gray-100 dark:hover:bg-gray-700" style="border-color: var(--border-color); color: var(--text-primary);">Cancel</button>
-                <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 transition">Upload</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    // ============ TAB SWITCHING ============
-    function switchTab(tabName) {
-        // Hide all tab panes
-        document.querySelectorAll('.tab-pane').forEach(pane => {
-            pane.classList.add('hidden');
-            pane.classList.remove('active');
-        });
+    <script>
+        // ============ SIDEBAR FUNCTIONS ============
+        const mobileBtn = document.getElementById('mobileMenuBtn');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
         
-        // Remove active class from all tab buttons
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.remove('active', 'bg-blue-600', 'text-white');
-            btn.classList.add('bg-gray-200', 'text-gray-700');
-        });
-        
-        // Show selected tab pane
-        const selectedPane = document.getElementById(tabName + 'Tab');
-        if (selectedPane) {
-            selectedPane.classList.remove('hidden');
-            selectedPane.classList.add('active');
+        if(mobileBtn) {
+            mobileBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                overlay.classList.toggle('hidden');
+                document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
+            });
+        }
+        if(overlay) {
+            overlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                overlay.classList.add('hidden');
+                document.body.style.overflow = '';
+            });
         }
         
-        // Add active class to selected button
-        const selectedBtn = document.getElementById('tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1) + 'Btn');
-        if (selectedBtn) {
-            selectedBtn.classList.remove('bg-gray-200', 'text-gray-700');
-            selectedBtn.classList.add('active', 'bg-blue-600', 'text-white');
-        }
-    }
-    
-    // ============ APPROVE/REJECT ============
-    function openApproveModal(id) {
-        document.getElementById('approveForm').action = '/staff/approve/' + id;
-        document.getElementById('approveModal').classList.remove('hidden');
-        document.getElementById('approveModal').classList.add('flex');
-        document.body.style.overflow = 'hidden';
-    }
-    function closeApproveModal() {
-        document.getElementById('approveModal').classList.add('hidden');
-        document.getElementById('approveModal').classList.remove('flex');
-        document.body.style.overflow = '';
-    }
-    function openRejectModal(id) {
-        document.getElementById('rejectForm').action = '/staff/reject/' + id;
-        document.getElementById('rejectModal').classList.remove('hidden');
-        document.getElementById('rejectModal').classList.add('flex');
-        document.body.style.overflow = 'hidden';
-    }
-    function closeRejectModal() {
-        document.getElementById('rejectModal').classList.add('hidden');
-        document.getElementById('rejectModal').classList.remove('flex');
-        document.body.style.overflow = '';
-    }
-    
-    // ============ REQUIREMENTS ============
-    function openAddRequirementModal() {
-        document.getElementById('addRequirementModal').classList.remove('hidden');
-        document.getElementById('addRequirementModal').classList.add('flex');
-        document.getElementById('addRequirementForm').reset();
-        document.body.style.overflow = 'hidden';
-    }
-    function closeAddRequirementModal() {
-        document.getElementById('addRequirementModal').classList.add('hidden');
-        document.getElementById('addRequirementModal').classList.remove('flex');
-        document.body.style.overflow = '';
-    }
-    
-    function editRequirement(id, name, isRequired, isActive, yearLevel) {
-        document.getElementById('editRequirementForm').action = '/staff/year-requirements/' + id;
-        document.getElementById('edit_req_name').value = name;
-        document.getElementById('edit_year_level').value = yearLevel;
-        document.getElementById('edit_year_level_hidden').value = yearLevel;
-        document.getElementById('edit_is_required').checked = isRequired;
-        document.getElementById('edit_is_active').checked = isActive;
-        document.getElementById('editRequirementModal').classList.remove('hidden');
-        document.getElementById('editRequirementModal').classList.add('flex');
-        document.body.style.overflow = 'hidden';
-    }
-    function closeEditRequirementModal() {
-        document.getElementById('editRequirementModal').classList.add('hidden');
-        document.getElementById('editRequirementModal').classList.remove('flex');
-        document.body.style.overflow = '';
-    }
-    
-    function deleteRequirement(id, name) {
-        Swal.fire({
-            title: 'Delete Requirement?',
-            text: 'Are you sure you want to delete "' + name + '"?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, delete it!',
-            cancelButtonText: 'Cancel'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                let form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '/staff/year-requirements/' + id;
-                let csrf = document.createElement('input');
-                csrf.type = 'hidden';
-                csrf.name = '_token';
-                csrf.value = '{{ csrf_token() }}';
-                let method = document.createElement('input');
-                method.type = 'hidden';
-                method.name = '_method';
-                method.value = 'DELETE';
-                form.appendChild(csrf);
-                form.appendChild(method);
-                document.body.appendChild(form);
-                form.submit();
-            }
+        document.querySelectorAll('.nav-link').forEach(link => {
+            if(link.href === window.location.href) link.classList.add('nav-active');
         });
-    }
-    
-    function filterRequirements() {
-        const filter = document.getElementById('yearLevelFilter').value;
-        const rows = document.querySelectorAll('.requirement-row');
-        let hasVisible = false;
         
-        rows.forEach(row => {
-            if (filter === 'all' || row.dataset.year === filter) {
-                row.style.display = '';
-                hasVisible = true;
+        // ============ NOTIFICATION DROPDOWN ============
+        const notificationBell = document.getElementById('notificationBell');
+        const notificationDropdown = document.getElementById('notificationDropdown');
+        
+        if (notificationBell) {
+            notificationBell.addEventListener('click', function(e) {
+                e.stopPropagation();
+                notificationDropdown.classList.toggle('show');
+            });
+            
+            document.addEventListener('click', function(e) {
+                if (notificationBell && notificationDropdown && 
+                    !notificationBell.contains(e.target) && 
+                    !notificationDropdown.contains(e.target)) {
+                    notificationDropdown.classList.remove('show');
+                }
+            });
+        }
+        
+        // ============ DARK MODE FUNCTION ============
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        
+        function toggleDarkMode() {
+            const body = document.body;
+            
+            body.classList.toggle('dark-mode');
+            
+            if (body.classList.contains('dark-mode')) {
+                localStorage.setItem('staff_dark_mode', 'enabled');
+                if (darkModeToggle) darkModeToggle.checked = true;
             } else {
-                row.style.display = 'none';
-            }
-        });
-        
-        const noResultRow = document.getElementById('noRequirementsRow');
-        if (noResultRow) {
-            if (!hasVisible && filter !== 'all') {
-                noResultRow.style.display = '';
-                noResultRow.innerHTML = '<td colspan="5" class="px-5 py-8 text-center" style="color: var(--text-secondary);"><i class="fas fa-filter text-4xl mb-2 opacity-50"></i><p>No requirements for ' + filter + '</p></td>';
-            } else if (filter === 'all' && rows.length === 0) {
-                noResultRow.style.display = '';
-            } else {
-                noResultRow.style.display = 'none';
+                localStorage.setItem('staff_dark_mode', 'disabled');
+                if (darkModeToggle) darkModeToggle.checked = false;
             }
         }
-    }
-    
-    function filterVerifiedList() {
-        const filter = document.getElementById('verifiedYearFilter').value;
-        const rows = document.querySelectorAll('.verified-row');
-        let hasVisible = false;
         
-        rows.forEach(row => {
-            if (filter === 'all' || row.dataset.year === filter) {
-                row.style.display = '';
-                hasVisible = true;
-            } else {
-                row.style.display = 'none';
-            }
+        // Kapag clinick ang theme-switch div
+        document.querySelector('.theme-switch')?.addEventListener('click', (e) => {
+            if (e.target.closest('.switch')) return;
+            toggleDarkMode();
         });
         
-        const noResultRow = document.getElementById('noVerifiedRow');
-        if (noResultRow) {
-            if (!hasVisible && filter !== 'all') {
-                noResultRow.style.display = '';
-                noResultRow.innerHTML = '<td colspan="4" class="px-5 py-8 text-center" style="color: var(--text-secondary);"><i class="fas fa-filter text-4xl mb-2 opacity-50"></i><p>No verified students for ' + filter + '</p><button onclick="openUploadCSVModal()" class="mt-2 text-blue-600 hover:underline">Upload CSV to add students</button></td>';
-            } else if (filter === 'all' && rows.length === 0) {
-                noResultRow.style.display = '';
-            } else {
-                noResultRow.style.display = 'none';
-            }
+        // Kapag clinick ang checkbox mismo
+        if (darkModeToggle) {
+            darkModeToggle.addEventListener('change', (e) => {
+                e.stopPropagation();
+                toggleDarkMode();
+            });
         }
-    }
-    
-    // ============ REPORTS ============
-    function downloadReport(id) {
-        window.location.href = '/staff/download-export/' + id;
-    }
-    function importReport(id) {
-        Swal.fire({
-            title: 'Import Report?',
-            text: 'This will replace the current verified list.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, import',
-            cancelButtonText: 'Cancel'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                fetch('/staff/import-report', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json', 
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}' 
-                    },
-                    body: JSON.stringify({ export_id: id })
-                }).then(response => response.json())
-                  .then(data => {
-                      if (data.success) {
-                          Swal.fire('Success!', data.message, 'success').then(() => location.reload());
-                      } else {
-                          Swal.fire('Error!', data.message, 'error');
-                      }
-                  });
-            }
-        });
-    }
-    
-    // ============ UPLOAD CSV ============
-    function openUploadCSVModal() {
-        document.getElementById('uploadCSVModal').classList.remove('hidden');
-        document.getElementById('uploadCSVModal').classList.add('flex');
-        document.body.style.overflow = 'hidden';
-    }
-    function closeUploadCSVModal() {
-        document.getElementById('uploadCSVModal').classList.add('hidden');
-        document.getElementById('uploadCSVModal').classList.remove('flex');
-        document.body.style.overflow = '';
-    }
-    
-    // Close modals when clicking outside
-    document.getElementById('approveModal')?.addEventListener('click', e => { if (e.target === e.currentTarget) closeApproveModal(); });
-    document.getElementById('rejectModal')?.addEventListener('click', e => { if (e.target === e.currentTarget) closeRejectModal(); });
-    document.getElementById('addRequirementModal')?.addEventListener('click', e => { if (e.target === e.currentTarget) closeAddRequirementModal(); });
-    document.getElementById('editRequirementModal')?.addEventListener('click', e => { if (e.target === e.currentTarget) closeEditRequirementModal(); });
-    document.getElementById('uploadCSVModal')?.addEventListener('click', e => { if (e.target === e.currentTarget) closeUploadCSVModal(); });
-    
-    // Close modals with Escape key
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closeApproveModal();
-            closeRejectModal();
-            closeAddRequirementModal();
-            closeEditRequirementModal();
-            closeUploadCSVModal();
+        
+        // Load dark mode preference
+        const darkModePref = localStorage.getItem('staff_dark_mode');
+        if (darkModePref === 'enabled') {
+            document.body.classList.add('dark-mode');
+            if (darkModeToggle) darkModeToggle.checked = true;
         }
-    });
-// ============ TAB PERSISTENCE ============
-// Get the last active tab from localStorage
-const lastActiveTab = localStorage.getItem('staff_active_tab') || 'queue';
-
-// Function to save current tab
-function saveCurrentTab(tabName) {
-    localStorage.setItem('staff_active_tab', tabName);
-}
-
-// Modified switchTab function with persistence
-function switchTab(tabName, save = true) {
-    // Hide all tab panes
-    document.querySelectorAll('.tab-pane').forEach(pane => {
-        pane.classList.add('hidden');
-        pane.classList.remove('active');
-    });
-    
-    // Remove active class from all tab buttons
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active', 'bg-blue-600', 'text-white');
-        btn.classList.add('bg-gray-200', 'text-gray-700');
-    });
-    
-    // Show selected tab pane
-    const selectedPane = document.getElementById(tabName + 'Tab');
-    if (selectedPane) {
-        selectedPane.classList.remove('hidden');
-        selectedPane.classList.add('active');
-    }
-    
-    // Add active class to selected button
-    const selectedBtn = document.getElementById('tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1) + 'Btn');
-    if (selectedBtn) {
-        selectedBtn.classList.remove('bg-gray-200', 'text-gray-700');
-        selectedBtn.classList.add('active', 'bg-blue-600', 'text-white');
-    }
-    
-    // Save to localStorage
-    if (save) {
-        saveCurrentTab(tabName);
-    }
-}
-
-// Restore last active tab on page load
-if (lastActiveTab) {
-    // Make sure the tab exists
-    const tabExists = document.getElementById(lastActiveTab + 'Tab') !== null;
-    if (tabExists) {
-        switchTab(lastActiveTab, false);
-    }
-}
-</script>
-@endsection
+        
+        // ============ AUTO-REFRESH NOTIFICATIONS ============
+        // Refresh notifications every 60 seconds
+        setInterval(function() {
+            // The badge count will update on next open
+        }, 60000);
+    </script>
+    @stack('scripts')
+</body>
+</html>

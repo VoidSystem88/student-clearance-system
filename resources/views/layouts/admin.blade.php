@@ -107,11 +107,10 @@
                 <span>Announcements</span>
             </a>
             
-            <!-- REMINDERS LINK - DISABLED (commented out to fix 500 error) -->
-            {{-- <a href="{{ route('admin.reminders') }}" class="nav-link flex items-center gap-3 px-5 py-3 text-gray-700 hover:bg-gray-100 transition">
+            <a href="{{ route('admin.reminders') }}" class="nav-link flex items-center gap-3 px-5 py-3 text-gray-700 hover:bg-gray-100 transition">
                 <i class="fas fa-bell w-5"></i>
                 <span>Reminders Staff/Officers</span>
-            </a> --}}
+            </a>
             
             <a href="{{ route('admin.profile') }}" class="nav-link flex items-center gap-3 px-5 py-3 text-gray-700 hover:bg-gray-100 transition">
                 <i class="fas fa-user-circle w-5"></i>

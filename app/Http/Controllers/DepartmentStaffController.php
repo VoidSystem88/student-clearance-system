@@ -7,58 +7,95 @@ use App\Models\Department;
 use App\Models\ClearanceRequest;
 use App\Models\ApprovalLog;
 use App\Models\DepartmentRequirement;
-use App\Models\VerifiedStudent;
 use App\Models\VerifiedExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ClearanceStatusMail;
 
 class DepartmentStaffController extends Controller
 {
-    // ============ HELPER METHODS FOR YEAR LEVEL FILTERING ============
-    
-    private function getYearNumber($yearLevel)
+    // ============ GET STAFF DEPARTMENT FROM SESSION ============
+    private function getStaffDepartment()
     {
-        return match($yearLevel) {
-            '1st Year' => 1,
-            '2nd Year' => 2,
-            '3rd Year' => 3,
-            '4th Year' => 4,
-            default => 4,
-        };
+        return Department::find(session('staff_department_id'));
     }
 
-    // ✅ PINAGBAGO: Gamitin ang Department model method
-    // Hindi na kailangan ang isDepartmentRequiredForYear dito dahil nasa Department model na
+    // ============ STAFF LOGIN & AUTHENTICATION ============
+
+    public function showLoginForm()
+    {
+        if (session('staff_logged_in')) {
+            return redirect()->route('staff.dashboard');
+        }
+        return view('staff.login');
+    }
+
+   public function login(Request $request)
+{
+    $request->validate([
+        'email' => 'required|email',
+        'password' => 'required',
+    ]);
+
+    $staff = Department::where('staff_email', $request->email)->first();
+
+    if ($staff && Hash::check($request->password, $staff->staff_password)) {
+        session([
+            'staff_logged_in' => true,
+            'staff_id' => $staff->id,
+            'staff_name' => $staff->name,
+            'staff_email' => $staff->staff_email,
+            'staff_department_id' => $staff->id,
+        ]);
+        
+        // ✅ IDAGDAG ITO - I-save ang session bago mag-return ng JSON
+        session()->save();  // <--- IDAGDAG ITO!
+        
+        // ✅ Kung AJAX request, mag-return ng JSON
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'redirect' => route('staff.dashboard')
+            ]);
+        }
+        
+        return redirect()->route('staff.dashboard');
+    }
+
+    // ✅ Kung AJAX request, mag-return ng JSON error
+    if ($request->wantsJson() || $request->ajax()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Invalid email or password'
+        ], 401);
+    }
+
+    return back()->withErrors([
+        'email' => 'Invalid credentials',
+    ]);
+}
+
+    // ============ DASHBOARD ============
 
     public function dashboard()
     {
-        $user = Auth::user();
+        if (!session('staff_logged_in')) {
+            return redirect()->route('staff.login');
+        }
         
-        $department = null;
-        if ($user->department_id) {
-            $department = Department::find($user->department_id);
-        }
-        if (!$department && $user->email) {
-            $department = Department::where('staff_email', $user->email)->first();
-        }
+        $department = Department::find(session('staff_department_id'));
         
         if (!$department) {
-            $department = Department::first();
-        }
-
-        if (!$department) {
-            return redirect('/')->with('error', 'Your account is not linked to any department. Please contact admin.');
+            return redirect()->route('staff.login')->with('error', 'Department not found.');
         }
         
-        // Get all clearance requests for this department
         $allRequests = ClearanceRequest::where('department_id', $department->id)
             ->with('student')
             ->orderBy('submitted_at', 'desc')
             ->get();
         
-        // ✅ PINAGBAGO: Gamitin ang isRequiredForYear() method ng Department model
         $filteredRequests = $allRequests->filter(function($request) use ($department) {
             $student = $request->student;
             if (!$student) return false;
@@ -74,7 +111,6 @@ class DepartmentStaffController extends Controller
         $rejectedCount = $rejectedRequests->count();
         $totalStudents = User::where('role', 'student')->count();
         
-        // ============ REPORTS FROM OFFICER ============
         $exports = VerifiedExport::where('department_id', $department->id)
             ->where('status', 'active')
             ->orderBy('created_at', 'desc')
@@ -82,7 +118,6 @@ class DepartmentStaffController extends Controller
         
         $exportsCount = $exports->count();
         
-        // ============ VERIFIED LIST ============
         $verifiedStudents = collect();
         $verifiedCount = 0;
         $currentReportName = null;
@@ -123,28 +158,17 @@ class DepartmentStaffController extends Controller
     }
     
     // ============ DIRECT UPLOAD CSV TO VERIFIED LIST ============
+    
     public function uploadCSVToVerified(Request $request)
     {
         $request->validate([
             'csv_file' => 'required|file|mimes:csv,txt|max:5120',
         ]);
         
-        $user = Auth::user();
-        
-        $department = null;
-        if ($user->department_id) {
-            $department = Department::find($user->department_id);
-        }
-        if (!$department && $user->email) {
-            $department = Department::where('staff_email', $user->email)->first();
-        }
+        $department = $this->getStaffDepartment();
         
         if (!$department) {
-            $department = Department::first();
-        }
-        
-        if (!$department) {
-            return redirect()->back()->with('error', 'No department found.');
+            return redirect()->back()->with('error', 'Department not found.');
         }
         
         $file = $request->file('csv_file');
@@ -183,7 +207,7 @@ class DepartmentStaffController extends Controller
             'report_name' => 'CSV Upload - ' . date('Y-m-d H:i:s'),
             'students_data' => json_encode($studentsData),
             'total_records' => $count,
-            'imported_by' => $user->id,
+            'imported_by' => session('staff_id'),
             'imported_at' => now(),
             'status' => 'active',
             'created_at' => now(),
@@ -199,6 +223,7 @@ class DepartmentStaffController extends Controller
     }
     
     // ============ IMPORT REPORT TO VERIFIED LIST ============
+    
     public function importReportToVerified(Request $request)
     {
         try {
@@ -206,15 +231,7 @@ class DepartmentStaffController extends Controller
                 'export_id' => 'required|exists:verified_exports,id',
             ]);
             
-            $user = Auth::user();
-            
-            $department = null;
-            if ($user->department_id) {
-                $department = Department::find($user->department_id);
-            }
-            if (!$department && $user->email) {
-                $department = Department::where('staff_email', $user->email)->first();
-            }
+            $department = $this->getStaffDepartment();
             
             if (!$department) {
                 return response()->json(['success' => false, 'message' => 'Department not found.'], 404);
@@ -247,7 +264,7 @@ class DepartmentStaffController extends Controller
                 'report_name' => $export->event_name,
                 'students_data' => json_encode($studentsData),
                 'total_records' => count($studentsData),
-                'imported_by' => $user->id,
+                'imported_by' => session('staff_id'),
                 'imported_at' => now(),
                 'status' => 'active',
                 'created_at' => now(),
@@ -274,20 +291,10 @@ class DepartmentStaffController extends Controller
     }
     
     // ============ APPROVE CLEARANCE ============
+    
     public function approve($id)
     {
-        $user = Auth::user();
-        
-        $department = null;
-        if ($user->department_id) {
-            $department = Department::where('id', $user->department_id)->first();
-            if (!$department) {
-                $department = Department::where('name', $user->department_id)->first();
-            }
-        }
-        if (!$department) {
-            $department = Department::where('staff_email', $user->email)->first();
-        }
+        $department = $this->getStaffDepartment();
         
         if (!$department) {
             return redirect()->route('staff.dashboard')->with('error', 'Department not found');
@@ -307,7 +314,7 @@ class DepartmentStaffController extends Controller
             'student_id' => $clearanceRequest->student_id,
             'department_id' => $department->id,
             'action' => 'approved',
-            'staff_email' => $user->email,
+            'staff_email' => session('staff_email'),
         ]);
         
         $this->checkFullClearance($clearanceRequest->student_id);
@@ -316,24 +323,14 @@ class DepartmentStaffController extends Controller
     }
     
     // ============ REJECT CLEARANCE ============
+    
     public function reject(Request $request, $id)
     {
         $request->validate([
             'remarks' => 'required|string',
         ]);
         
-        $user = Auth::user();
-        
-        $department = null;
-        if ($user->department_id) {
-            $department = Department::where('id', $user->department_id)->first();
-            if (!$department) {
-                $department = Department::where('name', $user->department_id)->first();
-            }
-        }
-        if (!$department) {
-            $department = Department::where('staff_email', $user->email)->first();
-        }
+        $department = $this->getStaffDepartment();
         
         if (!$department) {
             return redirect()->route('staff.dashboard')->with('error', 'Department not found');
@@ -355,21 +352,21 @@ class DepartmentStaffController extends Controller
             'department_id' => $department->id,
             'action' => 'rejected',
             'remarks' => $request->remarks,
-            'staff_email' => $user->email,
+            'staff_email' => session('staff_email'),
         ]);
         
         return redirect()->route('staff.dashboard')->with('success', 'Clearance rejected');
     }
     
     // ============ REQUIREMENT MANAGEMENT ============
+    
     public function storeRequirement(Request $request)
     {
         $request->validate([
             'requirement_name' => 'required|string|max:255',
         ]);
 
-        $user = Auth::user();
-        $department = $this->getStaffDepartment($user);
+        $department = $this->getStaffDepartment();
 
         if (!$department) {
             return redirect()->back()->with('error', 'Department not found.');
@@ -395,8 +392,7 @@ class DepartmentStaffController extends Controller
         ]);
 
         $requirement = DepartmentRequirement::findOrFail($id);
-        $user = Auth::user();
-        $department = $this->getStaffDepartment($user);
+        $department = $this->getStaffDepartment();
 
         if (!$department || $department->id != $requirement->department_id) {
             return redirect()->back()->with('error', 'Unauthorized');
@@ -414,8 +410,7 @@ class DepartmentStaffController extends Controller
     public function destroyRequirement($id)
     {
         $requirement = DepartmentRequirement::findOrFail($id);
-        $user = Auth::user();
-        $department = $this->getStaffDepartment($user);
+        $department = $this->getStaffDepartment();
 
         if (!$department || $department->id != $requirement->department_id) {
             return redirect()->back()->with('error', 'Unauthorized');
@@ -426,27 +421,7 @@ class DepartmentStaffController extends Controller
         return redirect()->route('staff.dashboard')->with('success', 'Requirement deleted successfully!');
     }
     
-    // ============ HELPER METHODS ============
-    
-    private function getStaffDepartment($user)
-    {
-        $department = null;
-        
-        if ($user->department_id) {
-            $department = Department::where('id', $user->department_id)->first();
-            if (!$department) {
-                $department = Department::where('name', $user->department_id)->first();
-            }
-        }
-        
-        if (!$department) {
-            $department = Department::where('staff_email', $user->email)->first();
-        }
-        
-        return $department;
-    }
-    
-    // ============ YEAR REQUIREMENTS MANAGEMENT (NEW) ============
+    // ============ YEAR REQUIREMENTS MANAGEMENT ============
     
     public function storeYearRequirement(Request $request)
     {
@@ -455,7 +430,7 @@ class DepartmentStaffController extends Controller
             'requirement_name' => 'required|string|max:255',
         ]);
 
-        $department = $this->getStaffDepartment(Auth::user());
+        $department = $this->getStaffDepartment();
 
         if (!$department) {
             return redirect()->back()->with('error', 'Department not found.');
@@ -484,7 +459,7 @@ class DepartmentStaffController extends Controller
         ]);
 
         $requirement = \App\Models\DepartmentYearRequirement::findOrFail($id);
-        $department = $this->getStaffDepartment(Auth::user());
+        $department = $this->getStaffDepartment();
 
         if (!$department || $department->id != $requirement->department_id) {
             return redirect()->back()->with('error', 'Unauthorized');
@@ -502,7 +477,7 @@ class DepartmentStaffController extends Controller
     public function destroyYearRequirement($id)
     {
         $requirement = \App\Models\DepartmentYearRequirement::findOrFail($id);
-        $department = $this->getStaffDepartment(Auth::user());
+        $department = $this->getStaffDepartment();
 
         if (!$department || $department->id != $requirement->department_id) {
             return redirect()->back()->with('error', 'Unauthorized');
@@ -515,7 +490,7 @@ class DepartmentStaffController extends Controller
     
     public function getYearRequirements($yearLevel = null)
     {
-        $department = $this->getStaffDepartment(Auth::user());
+        $department = $this->getStaffDepartment();
         
         if (!$department) {
             return response()->json(['error' => 'Department not found'], 404);
@@ -537,7 +512,10 @@ class DepartmentStaffController extends Controller
             'success' => true,
             'requirements' => $requirements
         ]);
-    }    // ✅ PINAGBAGO: Gamitin ang isRequiredForYear() method ng Department model
+    }
+    
+    // ============ CHECK FULL CLEARANCE ============
+    
     private function checkFullClearance($studentId)
     {
         $student = User::where('id', $studentId)->where('role', 'student')->first();
@@ -546,7 +524,6 @@ class DepartmentStaffController extends Controller
             return;
         }
         
-        // Get only departments required for this student's year level using the model method
         $allDepartments = Department::where('is_active', true)->get();
         $requiredDepartments = $allDepartments->filter(function($dept) use ($student) {
             return $dept->isRequiredForYear($student->year_level);
@@ -554,7 +531,6 @@ class DepartmentStaffController extends Controller
         
         $requiredDeptIds = $requiredDepartments->pluck('id')->toArray();
         
-        // Get only clearance requests for required departments
         $allRequests = ClearanceRequest::where('student_id', $studentId)
             ->whereIn('department_id', $requiredDeptIds)
             ->get();
@@ -563,7 +539,6 @@ class DepartmentStaffController extends Controller
             return $request->status === 'approved';
         });
         
-        // Check if all required departments are approved
         $isFullyCleared = $allApproved && $allRequests->count() === count($requiredDeptIds);
         
         if ($isFullyCleared) {
@@ -572,7 +547,6 @@ class DepartmentStaffController extends Controller
                 'cleared_at' => now(),
             ]);
         } else {
-            // If not fully cleared, make sure is_cleared is false
             $student->update([
                 'is_cleared' => false,
             ]);

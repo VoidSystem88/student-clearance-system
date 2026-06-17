@@ -1,777 +1,771 @@
-@extends('layouts.officer')
-
-@section('title', 'Officer Dashboard')
-@section('header', 'Officer Dashboard')
-
-@section('content')
-<style>
-    /* Dark mode styles para sa buong page na ito */
-    body.dark-mode .bg-white {
-        background-color: #1f2937 !important;
-    }
-    body.dark-mode .bg-gray-50,
-    body.dark-mode .bg-gray-100 {
-        background-color: #1f2937 !important;
-    }
-    body.dark-mode .bg-blue-50 {
-        background-color: #1e3a5f !important;
-    }
-    body.dark-mode .bg-green-50 {
-        background-color: #064e3b !important;
-    }
-    body.dark-mode .bg-yellow-50 {
-        background-color: #713f12 !important;
-    }
-    body.dark-mode .bg-red-50 {
-        background-color: #7f1d1d !important;
-    }
-    body.dark-mode .bg-purple-50 {
-        background-color: #4c1d95 !important;
-    }
-    body.dark-mode .text-gray-500,
-    body.dark-mode .text-gray-600,
-    body.dark-mode .text-gray-700,
-    body.dark-mode .text-gray-800 {
-        color: #e5e7eb !important;
-    }
-    body.dark-mode .text-gray-400 {
-        color: #9ca3af !important;
-    }
-    body.dark-mode .border-gray-100,
-    body.dark-mode .border-gray-200,
-    body.dark-mode .border-gray-300 {
-        border-color: #374151 !important;
-    }
-    body.dark-mode .divide-gray-100 > div {
-        border-color: #374151 !important;
-    }
-    body.dark-mode .student-list-item {
-        border-bottom-color: #374151 !important;
-    }
-    body.dark-mode .verified-list-item {
-        border-bottom-color: #374151 !important;
-    }
-    body.dark-mode .mobile-tab {
-        background-color: #374151 !important;
-        color: #e5e7eb !important;
-    }
-    body.dark-mode .mobile-tab.active {
-        background-color: #3b82f6 !important;
-        color: white !important;
-    }
-    body.dark-mode .student-panel {
-        background-color: #1f2937 !important;
-        border-left-color: #374151 !important;
-    }
-    body.dark-mode .slide-arrow {
-        background-color: #3b82f6 !important;
-    }
-    body.dark-mode .student-name {
-        color: #e5e7eb !important;
-    }
-    body.dark-mode .student-detail {
-        color: #9ca3af !important;
-    }
-    body.dark-mode .remove-btn {
-        color: #ef4444 !important;
-    }
-    body.dark-mode .remove-btn:hover {
-        color: #f87171 !important;
-    }
-    
-    /* Export button style */
-    .export-btn {
-        background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-        transition: all 0.3s ease;
-    }
-    .export-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
-    }
-    body.dark-mode .export-btn {
-        background: linear-gradient(135deg, #7c3aed, #5b21b6);
-    }
-    
-    /* Mobile Slide-out Panel Styles */
-    .student-panel {
-        position: fixed;
-        top: 0;
-        right: -100%;
-        width: 100%;
-        max-width: 400px;
-        height: 100%;
-        background: white;
-        box-shadow: -5px 0 30px rgba(0,0,0,0.3);
-        z-index: 1000;
-        transition: right 0.3s ease-in-out;
-        overflow-y: auto;
-        border-left: 1px solid #e5e7eb;
-    }
-    
-    .student-panel.open {
-        right: 0;
-    }
-    
-    .panel-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.5);
-        z-index: 999;
-        display: none;
-    }
-    
-    .panel-overlay.show {
-        display: block;
-    }
-    
-    .slide-arrow {
-        position: fixed;
-        right: 0;
-        top: 50%;
-        transform: translateY(-50%);
-        background: #3b82f6;
-        color: white;
-        width: 36px;
-        height: 70px;
-        border-radius: 20px 0 0 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        z-index: 998;
-        box-shadow: -2px 2px 8px rgba(0,0,0,0.15);
-        transition: all 0.2s;
-    }
-    
-    .slide-arrow:hover {
-        background: #2563eb;
-        width: 42px;
-    }
-    
-    .slide-arrow i {
-        font-size: 18px;
-    }
-    
-    /* Hide arrow on desktop */
-    @media (min-width: 768px) {
-        .slide-arrow, .panel-overlay {
-            display: none !important;
-        }
-        .desktop-layout {
-            display: block;
-        }
-        .mobile-layout {
-            display: none;
-        }
-    }
-    
-    @media (max-width: 767px) {
-        .desktop-layout {
-            display: none;
-        }
-        .mobile-layout {
-            display: block;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>@yield('title', 'Officer - Clearance System')</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Pigilan ang horizontal scroll */
+        html, body {
+            overflow-x: hidden !important;
+            width: 100%;
+            position: relative;
         }
         
-        /* Tabs for mobile */
-        .mobile-tabs {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 10px; }
+        
+        /* Sidebar */
+        .sidebar {
+            background: #0f172a;
+            color: #e2e8f0;
         }
-        .mobile-tab {
-            flex: 1;
-            text-align: center;
-            padding: 10px;
-            background: #f3f4f6;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
+        
+        .sidebar-transition { transition: all 0.3s ease; }
+        
+        .nav-link {
             transition: all 0.2s;
         }
-        .mobile-tab.active {
-            background: #3b82f6;
-            color: white;
+        .nav-link:hover {
+            background-color: #1e293b;
+        }
+        .nav-active {
+            background-color: #1e3a5f;
+            color: #60a5fa;
+            border-left: 4px solid #3b82f6;
         }
         
-        /* List items */
-        .student-list-item {
-            padding: 14px;
-            border-bottom: 1px solid #f0f0f0;
+        /* Dark Mode Toggle Switch - FLOATING BOTTOM RIGHT */
+        .float-dark-mode {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 999;
+        }
+        .theme-switch {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-        }
-        .student-info {
-            flex: 1;
-        }
-        .student-name {
-            font-weight: 600;
-            font-size: 14px;
-            color: #1f2937;
-        }
-        .student-detail {
-            font-size: 11px;
-            color: #6b7280;
-            margin-top: 2px;
-        }
-        .verify-btn-sm {
-            padding: 6px 14px;
-            font-size: 12px;
-            border-radius: 20px;
-        }
-        
-        /* Verified list item */
-        .verified-list-item {
-            padding: 14px;
-            border-bottom: 1px solid #e5e7eb;
-            display: flex;
             justify-content: space-between;
-            align-items: center;
-        }
-        .remove-btn {
-            color: #ef4444;
-            font-size: 13px;
-            background: none;
-            border: none;
+            padding: 12px 20px;
+            border-radius: 50px;
+            background: #ffffff;
             cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            gap: 12px;
+            border: 1px solid #e2e8f0;
+        }
+        body.dark-mode .theme-switch {
+            background: #1e293b;
+            border-color: #475569;
+        }
+        .theme-switch:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+        }
+        .switch-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #1e293b;
+        }
+        body.dark-mode .switch-label {
+            color: #e2e8f0;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1;
+            transition: 0.4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #fbbf24;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
         }
         
-        /* Hide tabs content */
-        .mobile-tab-content {
+        /* Animation for dark mode transition */
+        body {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        * {
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+        
+        /* Notification Dropdown Styles - FIXED FOR MOBILE */
+        .notification-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 380px;
+            max-width: 90vw;
+            max-height: 500px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2);
+            z-index: 1000;
+            overflow-y: auto;
             display: none;
         }
-        .mobile-tab-content.active {
+        .notification-dropdown.show {
             display: block;
         }
-        
-        /* Export button sa mobile */
-        .export-mobile-btn {
-            margin-bottom: 16px;
+
+        /* Light mode text colors - FORCE VISIBLE */
+        .notification-dropdown .notification-item {
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
         }
-    }
-</style>
+        .notification-dropdown .notification-item p {
+            color: #1f2937 !important;
+        }
+        .notification-dropdown .notification-item .text-gray-600,
+        .notification-dropdown .notification-item .text-gray-500,
+        .notification-dropdown .notification-item .text-gray-400 {
+            color: #4b5563 !important;
+        }
+        .notification-dropdown .notification-item .font-semibold {
+            color: #111827 !important;
+        }
+        .notification-dropdown .bg-yellow-50 {
+            background-color: #fefce8 !important;
+        }
+        .notification-dropdown .bg-yellow-50 h4 {
+            color: #854d0e !important;
+        }
+        .notification-dropdown h3 {
+            color: #111827 !important;
+        }
 
-<!-- Desktop Layout -->
-<div class="desktop-layout">
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 transition-colors">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-500 text-sm">Total Students</p>
-                    <p class="text-2xl font-bold text-blue-600">{{ $students->count() ?? 0 }}</p>
-                </div>
-                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    <i class="fas fa-users text-blue-600"></i>
-                </div>
-            </div>
-        </div>
-        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 transition-colors">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-500 text-sm">Verified</p>
-                    <p class="text-2xl font-bold text-green-600">{{ $verifiedCount ?? 0 }}</p>
-                </div>
-                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                    <i class="fas fa-check-circle text-green-600"></i>
-                </div>
-            </div>
-        </div>
-        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 transition-colors">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-500 text-sm">Not Verified</p>
-                    <p class="text-2xl font-bold text-yellow-600">{{ ($students->count() ?? 0) - ($verifiedCount ?? 0) }}</p>
-                </div>
-                <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
-                    <i class="fas fa-clock text-yellow-600"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- EXPORT BUTTON - Desktop -->
-    <div class="mb-6 flex justify-end">
-        <button onclick="exportVerifiedToCSV()" class="export-btn text-white px-5 py-2.5 rounded-lg shadow-md flex items-center gap-2">
-            <i class="fas fa-file-csv text-lg"></i>
-            <span>Export Verified to CSV</span>
-        </button>
-    </div>
-
-    <!-- Tabs Navigation Desktop -->
-    <div class="mb-4">
-        <div class="border-b border-gray-200">
-            <nav class="flex gap-2 flex-wrap" aria-label="Tabs">
-                <button onclick="switchTab('all')" id="tabAllBtn" class="tab-btn active px-5 py-2.5 text-sm font-medium rounded-t-lg bg-blue-600 text-white transition">
-                    <i class="fas fa-users mr-2"></i> All Students ({{ $students->count() ?? 0 }})
-                </button>
-                <button onclick="switchTab('verified')" id="tabVerifiedBtn" class="tab-btn px-5 py-2.5 text-sm font-medium rounded-t-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition">
-                    <i class="fas fa-check-double mr-2"></i> Verified List ({{ $verifiedCount ?? 0 }})
-                </button>
-            </nav>
-        </div>
-    </div>
-
-    <!-- ALL STUDENTS TAB Desktop -->
-    <div id="allTab" class="tab-pane active">
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-colors">
-            <div class="px-5 py-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-white transition-colors">
-                <div class="flex flex-wrap gap-3 justify-between items-center">
-                    <div>
-                        <h3 class="font-semibold text-gray-800">
-                            <i class="fas fa-users text-blue-600 mr-2"></i> All Students
-                        </h3>
-                        <p class="text-sm text-gray-500">Search and verify students</p>
-                    </div>
-                    <div class="relative">
-                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
-                        <input type="text" id="searchStudentInput" placeholder="Search..." 
-                               class="pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm w-64 bg-white text-gray-800">
-                    </div>
-                </div>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-600">Student ID</th>
-                            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-600">Name</th>
-                            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-600">Course</th>
-                            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-600">Status</th>
-                            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-600">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="studentsTableBody">
-                        @foreach($students as $student)
-                        @php $isVerified = in_array($student->student_id, $verifiedStudentIds ?? []); @endphp
-                        <tr class="student-row border-b border-gray-100" data-name="{{ strtolower($student->first_name . ' ' . $student->last_name) }}" data-student-id="{{ $student->student_id }}">
-                            <td class="px-5 py-3 font-mono text-sm text-gray-700">{{ $student->student_id }}</td>
-                            <td class="px-5 py-3 text-gray-800">{{ $student->first_name }} {{ $student->last_name }}</td>
-                            <td class="px-5 py-3 text-gray-600">{{ $student->course }}</td>
-                            <td class="px-5 py-3">
-                                @if($isVerified)
-                                    <span class="text-green-600 text-sm"><i class="fas fa-check-circle"></i> Verified</span>
-                                @else
-                                    <span class="text-gray-500 text-sm">Not Verified</span>
-                                @endif
-                            </td>
-                            <td class="px-5 py-3">
-                                @if(!$isVerified)
-                                <button onclick="verifyStudent('{{ $student->student_id }}', '{{ addslashes($student->first_name . ' ' . $student->last_name) }}')" 
-                                        class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">
-                                    Verify
-                                </button>
-                                @endif
-                            </td>
-                         تضيفلها
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- VERIFIED TAB Desktop -->
-    <div id="verifiedTab" class="tab-pane hidden">
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-colors">
-            <div class="px-5 py-4 border-b border-gray-100 bg-gray-50 transition-colors">
-                <div class="flex flex-wrap gap-3 justify-between items-center">
-                    <h3 class="font-semibold text-gray-800"><i class="fas fa-check-double text-green-600 mr-2"></i> Verified Students</h3>
-                    <div class="relative">
-                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
-                        <input type="text" id="searchVerifiedInput" placeholder="Search..." class="pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm w-64 bg-white text-gray-800">
-                    </div>
-                </div>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-600">Student ID</th>
-                            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-600">Name</th>
-                            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-600">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="verifiedTableBody">
-                        @foreach($verifiedStudents as $verified)
-                        <tr class="border-b border-gray-100">
-                            <td class="px-5 py-3 font-mono text-sm text-gray-700">{{ $verified->student_id }}</td>
-                            <td class="px-5 py-3 text-gray-800">{{ $verified->student_name }}</td>
-                            <td class="px-5 py-3">
-                                <button onclick="removeVerified({{ $verified->id }})" class="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700">
-                                    Remove
-                                </button>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ============ MOBILE LAYOUT ============ -->
-<div class="mobile-layout">
-    <!-- EXPORT BUTTON - Mobile -->
-    <div class="export-mobile-btn">
-        <button onclick="exportVerifiedToCSV()" class="export-btn text-white px-4 py-2.5 rounded-lg shadow-md flex items-center justify-center gap-2 w-full">
-            <i class="fas fa-file-csv text-lg"></i>
-            <span>Export Verified to CSV</span>
-        </button>
-    </div>
-    
-    <!-- Mobile Tabs -->
-    <div class="mobile-tabs">
-        <div id="mobileTabAll" class="mobile-tab active" onclick="switchMobileTab('all')">
-            <i class="fas fa-users mr-1"></i> All Students
-        </div>
-        <div id="mobileTabVerified" class="mobile-tab" onclick="switchMobileTab('verified')">
-            <i class="fas fa-check-double mr-1"></i> Verified
-        </div>
-    </div>
-    
-    <!-- Mobile Tab Content: All Students -->
-    <div id="mobileAllContent" class="mobile-tab-content active">
-        <div class="bg-white rounded-xl shadow-sm transition-colors">
-            <div class="p-3 border-b border-gray-100">
-                <div class="relative">
-                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
-                    <input type="text" id="mobileSearchInput" placeholder="Search student..." 
-                           class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-800">
-                </div>
-            </div>
-            <div id="mobileStudentsList" class="divide-y divide-gray-100 max-h-96 overflow-y-auto">
-                @foreach($students as $student)
-                @php $isVerified = in_array($student->student_id, $verifiedStudentIds ?? []); @endphp
-                <div class="student-list-item student-mobile-item" 
-                     data-name="{{ strtolower($student->first_name . ' ' . $student->last_name) }}"
-                     data-student-id="{{ $student->student_id }}">
-                    <div class="student-info">
-                        <div class="student-name">{{ $student->first_name }} {{ $student->last_name }}</div>
-                        <div class="student-detail">{{ $student->student_id }} • {{ $student->course }}</div>
-                    </div>
-                    <div>
-                        @if($isVerified)
-                            <span class="text-green-600 text-xs"><i class="fas fa-check-circle"></i> Verified</span>
-                        @else
-                            <button onclick="verifyStudentMobile('{{ $student->student_id }}', '{{ addslashes($student->first_name . ' ' . $student->last_name) }}')" 
-                                    class="verify-btn-sm bg-green-600 text-white px-3 py-1 rounded-full text-xs hover:bg-green-700">
-                                Verify
-                            </button>
-                        @endif
-                    </div>
-                </div>
-                @endforeach
-            </div>
-        </div>
-    </div>
-    
-    <!-- Mobile Tab Content: Verified List -->
-    <div id="mobileVerifiedContent" class="mobile-tab-content">
-        <div class="bg-white rounded-xl shadow-sm border-l-4 border-green-500 transition-colors">
-            <div class="px-4 py-3 border-b border-gray-100 font-semibold text-gray-800 bg-green-50 rounded-t-xl transition-colors">
-                <i class="fas fa-check-double text-green-600 mr-2"></i> Verified Students 
-                <span class="text-sm text-gray-500">({{ $verifiedCount ?? 0 }})</span>
-            </div>
-            <div class="max-h-96 overflow-y-auto">
-                @forelse($verifiedStudents as $verified)
-                <div class="verified-list-item hover:bg-gray-50 transition-colors">
-                    <div>
-                        <div class="font-medium text-gray-800">{{ $verified->student_name }}</div>
-                        <div class="text-xs text-gray-500">{{ $verified->student_id }}</div>
-                    </div>
-                    <button onclick="removeVerified({{ $verified->id }})" class="remove-btn hover:text-red-700">
-                        <i class="fas fa-trash-alt mr-1"></i> Remove
-                    </button>
-                </div>
-                @empty
-                <div class="p-8 text-center text-gray-500">
-                    <i class="fas fa-inbox text-3xl mb-2 text-gray-300"></i>
-                    <p class="text-sm">No verified students yet</p>
-                    <p class="text-xs mt-1">Click Verify from All Students tab</p>
-                </div>
-                @endforelse
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Slide-out Arrow Button -->
-<div class="slide-arrow" onclick="openStatsPanel()">
-    <i class="fas fa-chevron-left"></i>
-</div>
-
-<!-- Panel Overlay -->
-<div id="panelOverlay" class="panel-overlay" onclick="closeStatsPanel()"></div>
-
-<!-- Slide-out Stats Panel (Cards) -->
-<div id="statsPanel" class="student-panel">
-    <div class="sticky top-0 bg-blue-600 text-white p-4 flex justify-between items-center">
-        <h3 class="font-semibold"><i class="fas fa-chart-line mr-2"></i> Statistics</h3>
-        <button onclick="closeStatsPanel()" class="text-white text-2xl">&times;</button>
-    </div>
-    
-    <div class="p-4 space-y-4">
-        <div class="bg-blue-50 rounded-xl p-4 text-center transition-colors">
-            <p class="text-gray-500 text-sm">Total Students</p>
-            <p class="text-3xl font-bold text-blue-600">{{ $students->count() ?? 0 }}</p>
-        </div>
-        <div class="bg-green-50 rounded-xl p-4 text-center transition-colors">
-            <p class="text-gray-500 text-sm">Verified</p>
-            <p class="text-3xl font-bold text-green-600">{{ $verifiedCount ?? 0 }}</p>
-        </div>
-        <div class="bg-yellow-50 rounded-xl p-4 text-center transition-colors">
-            <p class="text-gray-500 text-sm">Not Verified</p>
-            <p class="text-3xl font-bold text-yellow-600">{{ ($students->count() ?? 0) - ($verifiedCount ?? 0) }}</p>
-        </div>
-    </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    // ============ EXPORT TO CSV FUNCTION ============
-   function exportVerifiedToCSV() {
-    Swal.fire({
-        title: 'Export Verified Students?',
-        text: 'This will generate a CSV report and save it for department staff to download.',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#8b5cf6',
-        confirmButtonText: 'Yes, Generate Report!',
-        cancelButtonText: 'Cancel',
-        input: 'text',
-        inputPlaceholder: 'Event name (e.g., Annual Summit 2024)',
-        inputLabel: 'Event Name (optional)'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            const eventName = result.value || 'General_Verification';
+        /* Dark mode styles */
+        body.dark-mode .notification-dropdown {
+            background: #1f2937;
+        }
+        body.dark-mode .notification-dropdown .notification-item {
+            background: #1f2937;
+            border-bottom-color: #374151;
+        }
+        body.dark-mode .notification-dropdown .notification-item p {
+            color: #e5e7eb !important;
+        }
+        body.dark-mode .notification-dropdown .notification-item .text-gray-600,
+        body.dark-mode .notification-dropdown .notification-item .text-gray-500,
+        body.dark-mode .notification-dropdown .notification-item .text-gray-400 {
+            color: #9ca3af !important;
+        }
+        body.dark-mode .notification-dropdown .notification-item .font-semibold {
+            color: #ffffff !important;
+        }
+        body.dark-mode .notification-dropdown .bg-yellow-50 {
+            background-color: #422006 !important;
+        }
+        body.dark-mode .notification-dropdown .bg-yellow-50 h4 {
+            color: #fde047 !important;
+        }
+        body.dark-mode .notification-dropdown h3 {
+            color: #ffffff !important;
+        }
+        body.dark-mode .notification-dropdown {
+            color: #e5e7eb;
+        }
+        
+        .notification-dropdown.show {
+            display: block;
+        }
+        body.dark-mode .notification-dropdown {
+            background: #1f2937;
+            color: #e5e7eb;
+        }
+        
+        /* Mobile sidebar */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                position: fixed;
+                top: 0;
+                left: 0;
+                z-index: 1000;
+                width: 280px;
+                height: 100%;
+                transition: transform 0.3s ease;
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .sidebar-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.6);
+                z-index: 999;
+                display: none;
+            }
+            .sidebar-overlay.show {
+                display: block;
+            }
+            .main-content {
+                width: 100%;
+                overflow-x: hidden;
+            }
             
-            Swal.fire({
-                title: 'Generating Report...',
-                allowOutsideClick: false,
-                didOpen: () => { Swal.showLoading(); }
-            });
+            /* Hamburger icon sa mobile - itim, transparent background */
+            #mobileMenuBtn {
+                background: transparent !important;
+                color: #000000 !important;
+                box-shadow: none !important;
+            }
+            #mobileMenuBtn i {
+                color: #000000;
+            }
             
-            // Gamitin ang direct URL
-            fetch('/officer/export-csv', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify({ event_name: eventName })
-            })
-            .then(response => {
-                console.log('Status:', response.status);
-                if (!response.ok) {
-                    return response.text().then(text => {
-                        console.error('Response text:', text);
-                        throw new Error('HTTP ' + response.status + ': ' + text.substring(0, 200));
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Response data:', data);
-                if (data.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Report Generated!',
-                        text: data.message,
-                        confirmButtonColor: '#8b5cf6'
-                    });
+            /* Floating dark mode sa mobile - adjust size */
+            .theme-switch {
+                padding: 8px 16px;
+            }
+            .switch-label span {
+                display: none;
+            }
+            
+            /* Notification dropdown mobile fix - centered */
+            .notification-dropdown {
+                position: fixed;
+                top: 60px;
+                right: 10px;
+                left: auto;
+                width: calc(100% - 20px);
+                max-width: calc(100% - 20px);
+            }
+        }
+        
+        /* Desktop */
+        @media (min-width: 769px) {
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100%;
+                width: 260px;
+                display: flex;
+                flex-direction: column;
+            }
+            .main-content {
+                margin-left: 260px;
+                overflow-x: hidden;
+            }
+            .sidebar {
+                display: flex;
+                flex-direction: column;
+            }
+            .sidebar-nav {
+                flex: 1;
+            }
+            .sidebar-bottom {
+                margin-top: auto;
+                padding-bottom: 20px;
+            }
+            
+            .notification-dropdown {
+                width: 380px;
+                right: 0;
+                left: auto;
+            }
+        }
+        
+        /* Hamburger icon style - itim, transparent background, walang box shadow */
+        #mobileMenuBtn {
+            background: transparent !important;
+            color: #000000 !important;
+            box-shadow: none !important;
+            border: none;
+        }
+        #mobileMenuBtn i {
+            color: #000000;
+            font-size: 24px;
+        }
+        
+        .main-content {
+            overflow-x: hidden;
+            width: 100%;
+        }
+        
+        /* Dark mode styles */
+        body.dark-mode {
+            background-color: #111827;
+        }
+        body.dark-mode .bg-white {
+            background-color: #1f2937 !important;
+        }
+        body.dark-mode .bg-gray-50,
+        body.dark-mode .bg-gray-100 {
+            background-color: #1f2937 !important;
+        }
+        body.dark-mode .text-gray-800,
+        body.dark-mode .text-gray-700,
+        body.dark-mode .text-gray-600 {
+            color: #e5e7eb !important;
+        }
+        body.dark-mode .text-gray-500 {
+            color: #9ca3af !important;
+        }
+        body.dark-mode .border-gray-100,
+        body.dark-mode .border-gray-200,
+        body.dark-mode .border-gray-300 {
+            border-color: #374151 !important;
+        }
+        body.dark-mode .shadow-sm {
+            box-shadow: 0 1px 2px 0 rgba(0,0,0,0.3) !important;
+        }
+        body.dark-mode .bg-blue-50 {
+            background-color: #1e3a5f !important;
+        }
+        body.dark-mode .bg-green-50 {
+            background-color: #064e3b !important;
+        }
+        body.dark-mode .bg-yellow-50 {
+            background-color: #713f12 !important;
+        }
+        body.dark-mode .bg-red-50 {
+            background-color: #7f1d1d !important;
+        }
+        body.dark-mode .bg-purple-50 {
+            background-color: #4c1d95 !important;
+        }
+        
+        /* Dark mode notification */
+        body.dark-mode .notification-dropdown {
+            background: #1f2937;
+            border-color: #374151;
+        }
+        body.dark-mode .notification-item {
+            border-bottom-color: #374151;
+        }
+        body.dark-mode .notification-item:hover {
+            background-color: #374151;
+        }
+        
+        /* Dark mode hamburger icon */
+        body.dark-mode #mobileMenuBtn {
+            color: #ffffff !important;
+        }
+        body.dark-mode #mobileMenuBtn i {
+            color: #ffffff;
+        }
+        
+        .notification-bell {
+            position: relative;
+            cursor: pointer;
+        }
+        .notification-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ef4444;
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+        }
+        
+        /* Fix for dropdown content */
+        .notification-dropdown .notification-item {
+            word-break: break-word;
+        }
+        
+        /* Notification Bell Animation */
+        @keyframes ring {
+            0% { transform: rotate(0); }
+            20% { transform: rotate(15deg); }
+            40% { transform: rotate(-15deg); }
+            60% { transform: rotate(10deg); }
+            80% { transform: rotate(-10deg); }
+            100% { transform: rotate(0); }
+        }
+        .notification-ring {
+            animation: ring 0.6s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <!-- Sidebar Overlay for mobile -->
+    <div id="sidebarOverlay" class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+    <!-- Mobile Menu Toggle -->
+    <button id="mobileMenuBtn" class="md:hidden fixed top-4 left-4 z-50 p-2 rounded-lg">
+        <i class="fas fa-bars text-2xl"></i>
+    </button>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar flex flex-col shadow-xl sidebar-transition">
+        <!-- Header -->
+        <div class="p-5 border-b border-slate-700">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-user-tie text-white text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg text-white">Officer Portal</h1>
+                    <p class="text-xs text-slate-400">Verified Students Manager</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="sidebar-nav py-4 overflow-y-auto">
+            <a href="{{ route('officer.dashboard') }}" class="nav-link flex items-center gap-3 px-5 py-3 text-slate-300 hover:bg-slate-800 transition">
+                <i class="fas fa-check-double w-5"></i>
+                <span>Verified Students</span>
+            </a>
+        </nav>
+
+        <!-- Bottom Section: Logout -->
+        <div class="sidebar-bottom mt-auto">
+            <form method="POST" action="{{ route('logout') }}" class="px-4">
+                @csrf
+                <button type="submit" class="flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-900/30 transition w-full text-left rounded-lg">
+                    <i class="fas fa-sign-out-alt w-5"></i>
+                    <span>Logout</span>
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content min-h-screen">
+        <!-- Top Bar -->
+        <div class="bg-white shadow-sm sticky top-0 z-20 transition-colors">
+            <div class="px-4 py-3 flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="md:hidden w-10"></div>
+                    <h2 class="text-lg font-semibold text-gray-800">@yield('header', 'Officer Dashboard')</h2>
+                </div>
+                <div class="flex items-center gap-4">
+                    <!-- ============ NOTIFICATION BELL ============ -->
+                    @php
+                        $user = Auth::user();
+                        $today = date('Y-m-d');
+                        
+                        // Kunin ang mga reminders para sa officer
+                        $reminders = \App\Models\Reminder::where('is_active', true)
+                            ->where('start_date', '<=', $today)
+                            ->where(function($q) use ($today) {
+                                $q->whereNull('end_date')->orWhere('end_date', '>=', $today);
+                            })
+                            ->where(function($q) use ($user) {
+                                $q->where('target_role', $user->role)
+                                  ->orWhere('target_role', 'both');
+                            })
+                            ->where(function($q) use ($user) {
+                                $q->whereNull('department_id')
+                                  ->orWhere('department_id', $user->department_id);
+                            })
+                            ->orderBy('created_at', 'desc')
+                            ->get();
+                        
+                        // Kunin ang announcements (optional)
+                        $announcements = \App\Models\Announcement::where('is_active', true)
+                            ->orderBy('created_at', 'desc')
+                            ->take(5)
+                            ->get();
+                        
+                        $totalNotifications = $reminders->count() + $announcements->count();
+                    @endphp
+
+                    <div class="relative notification-bell">
+                        <button id="notificationBell" class="relative text-gray-600 hover:text-blue-600 transition-colors focus:outline-none" title="Notifications">
+                            <i class="fas fa-bell text-xl"></i>
+                            @if($totalNotifications > 0)
+                            <span class="notification-badge notification-ring">{{ $totalNotifications }}</span>
+                            @endif
+                        </button>
+                        
+                        <!-- Notification Dropdown -->
+                        <div id="notificationDropdown" class="notification-dropdown">
+                            <div class="sticky top-0 bg-gray-100 dark:bg-gray-800 px-4 py-2 border-b border-gray-200 dark:border-gray-700 rounded-t-lg">
+                                <h3 class="font-semibold text-gray-800 dark:text-white flex items-center gap-2">
+                                    <i class="fas fa-bell text-blue-600"></i> Notifications
+                                </h3>
+                            </div>
+                            
+                            @if($reminders->count() > 0)
+                            <div class="border-b border-gray-200 dark:border-gray-700">
+                                <div class="px-4 py-2 bg-yellow-50 dark:bg-yellow-900/20">
+                                    <h4 class="text-sm font-semibold text-yellow-800 dark:text-yellow-400 flex items-center gap-1">
+                                        <i class="fas fa-bell mr-1"></i> Reminders
+                                    </h4>
+                                </div>
+                                @foreach($reminders as $reminder)
+                                <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition notification-item">
+                                    <div class="flex items-start gap-2">
+                                        <div class="text-yellow-500 mt-1 flex-shrink-0">
+                                            <i class="fas fa-clock"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-semibold text-gray-800 dark:text-white">{{ $reminder->title }}</p>
+                                            <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">{{ $reminder->message }}</p>
+                                            @if($reminder->end_date)
+                                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                                                <i class="fas fa-calendar-alt"></i> Until: {{ \Carbon\Carbon::parse($reminder->end_date)->format('M d, Y') }}
+                                            </p>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                                @endforeach
+                            </div>
+                            @endif
+                            
+                            @if($announcements->count() > 0)
+                            <div>
+                                <div class="px-4 py-2 bg-blue-50 dark:bg-blue-900/20">
+                                    <h4 class="text-sm font-semibold text-blue-800 dark:text-blue-400 flex items-center gap-1">
+                                        <i class="fas fa-megaphone mr-1"></i> Announcements
+                                    </h4>
+                                </div>
+                                @foreach($announcements as $announcement)
+                                <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition notification-item">
+                                    <div class="flex items-start gap-2">
+                                        <div class="text-blue-500 mt-1 flex-shrink-0">
+                                            <i class="fas fa-bullhorn"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-semibold text-gray-800 dark:text-white">{{ $announcement->title }}</p>
+                                            <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">{{ Str::limit($announcement->content, 100) }}</p>
+                                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                                                <i class="fas fa-calendar-alt"></i> {{ $announcement->created_at->format('M d, Y') }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                @endforeach
+                            </div>
+                            @endif
+                            
+                            @if($totalNotifications == 0)
+                            <div class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                                <i class="fas fa-bell-slash text-3xl mb-2 text-gray-300 dark:text-gray-600"></i>
+                                <p class="text-sm">No new notifications</p>
+                                <p class="text-xs text-gray-400 mt-1">All caught up! 🎉</p>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                    
+                    <span class="text-sm text-gray-600 hidden sm:block">{{ Auth::user()->name ?? 'Officer' }}</span>
+                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user-tie text-blue-600 text-sm"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="p-4 md:p-6">
+            @if(session('success'))
+                <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-3 rounded mb-4 flex justify-between items-center">
+                    <span><i class="fas fa-check-circle mr-2"></i>{{ session('success') }}</span>
+                    <button onclick="this.parentElement.remove()" class="text-green-700">&times;</button>
+                </div>
+            @endif
+            @if(session('error'))
+                <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-3 rounded mb-4 flex justify-between items-center">
+                    <span><i class="fas fa-exclamation-circle mr-2"></i>{{ session('error') }}</span>
+                    <button onclick="this.parentElement.remove()" class="text-red-700">&times;</button>
+                </div>
+            @endif
+            
+            @yield('content')
+        </div>
+    </main>
+
+    <!-- FLOATING DARK MODE TOGGLE -->
+    <div class="float-dark-mode">
+        <div class="theme-switch" onclick="toggleDarkMode()">
+            <div class="switch-label">
+                <i class="fas fa-moon"></i>
+                <span>Dark Mode</span>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="darkModeToggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+    </div>
+
+    <script>
+        // ============ SIDEBAR MOBILE FUNCTIONS ============
+        const mobileBtn = document.getElementById('mobileMenuBtn');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        
+        function openSidebar() {
+            sidebar.classList.add('open');
+            if (sidebarOverlay) sidebarOverlay.classList.add('show');
+            document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+            document.body.style.top = `-${window.scrollY}px`;
+            document.body.dataset.scrollY = window.scrollY;
+        }
+        
+        function closeSidebar() {
+            sidebar.classList.remove('open');
+            if (sidebarOverlay) sidebarOverlay.classList.remove('show');
+            const scrollY = document.body.dataset.scrollY || 0;
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
+            document.body.style.top = '';
+            window.scrollTo(0, parseInt(scrollY));
+            delete document.body.dataset.scrollY;
+        }
+        
+        if (mobileBtn) {
+            mobileBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (sidebar.classList.contains('open')) {
+                    closeSidebar();
                 } else {
-                    Swal.fire({ icon: 'error', title: 'Error', text: data.message });
+                    openSidebar();
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire({ 
-                    icon: 'error', 
-                    title: 'Error', 
-                    text: error.message 
-                });
             });
         }
-    });
-}
-    
-    // ============ TAB SWITCHING (Desktop) ============
-    function switchTab(tabName) {
-        document.querySelectorAll('.tab-pane').forEach(pane => {
-            pane.classList.add('hidden');
-            pane.classList.remove('active');
-        });
-        document.getElementById(tabName + 'Tab').classList.remove('hidden');
-        document.getElementById(tabName + 'Tab').classList.add('active');
         
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.remove('active', 'bg-blue-600', 'text-white');
-            btn.classList.add('bg-gray-200', 'text-gray-700');
-        });
-        const activeBtn = document.getElementById('tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1) + 'Btn');
-        activeBtn.classList.remove('bg-gray-200', 'text-gray-700');
-        activeBtn.classList.add('active', 'bg-blue-600', 'text-white');
-    }
-    
-    // ============ MOBILE TAB SWITCHING ============
-    function switchMobileTab(tab) {
-        document.getElementById('mobileTabAll').classList.toggle('active', tab === 'all');
-        document.getElementById('mobileTabVerified').classList.toggle('active', tab === 'verified');
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', closeSidebar);
+        }
         
-        document.getElementById('mobileAllContent').classList.toggle('active', tab === 'all');
-        document.getElementById('mobileVerifiedContent').classList.toggle('active', tab === 'verified');
-    }
-    
-    // ============ STATS PANEL FUNCTIONS ============
-    function openStatsPanel() {
-        document.getElementById('statsPanel').classList.add('open');
-        document.getElementById('panelOverlay').classList.add('show');
-        document.body.style.overflow = 'hidden';
-    }
-    
-    function closeStatsPanel() {
-        document.getElementById('statsPanel').classList.remove('open');
-        document.getElementById('panelOverlay').classList.remove('show');
-        document.body.style.overflow = '';
-    }
-    
-    // ============ VERIFY STUDENT (Mobile) ============
-    function verifyStudentMobile(studentId, studentName) {
-        Swal.fire({
-            title: 'Verify Student?',
-            html: `Mark <strong>${studentName}</strong> as verified?`,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#22c55e',
-            confirmButtonText: 'Yes, Verify!',
-            cancelButtonText: 'Cancel'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                Swal.fire({ title: 'Verifying...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-                
-                fetch('{{ route("officer.verify.student") }}', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                    body: JSON.stringify({ student_id: studentId, student_name: studentName })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire({ icon: 'success', title: 'Verified!', text: data.message, timer: 1500, showConfirmButton: false })
-                            .then(() => location.reload());
-                    } else {
-                        Swal.fire({ icon: 'error', title: 'Error', text: data.message });
-                    }
-                })
-                .catch(() => Swal.fire({ icon: 'error', title: 'Error', text: 'Network error' }));
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    closeSidebar();
+                }
+            });
+        });
+        
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768 && sidebar.classList.contains('open')) {
+                closeSidebar();
             }
         });
-    }
-    
-    // ============ VERIFY STUDENT (Desktop) ============
-    function verifyStudent(studentId, studentName) {
-        Swal.fire({
-            title: 'Verify Student?',
-            html: `Mark <strong>${studentName}</strong> as verified?`,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#22c55e',
-            confirmButtonText: 'Yes, Verify!',
-            cancelButtonText: 'Cancel'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                Swal.fire({ title: 'Verifying...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-                
-                fetch('{{ route("officer.verify.student") }}', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                    body: JSON.stringify({ student_id: studentId, student_name: studentName })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire({ icon: 'success', title: 'Verified!', text: data.message, timer: 1500, showConfirmButton: false })
-                            .then(() => location.reload());
-                    } else {
-                        Swal.fire({ icon: 'error', title: 'Error', text: data.message });
-                    }
-                })
-                .catch(() => Swal.fire({ icon: 'error', title: 'Error', text: 'Network error' }));
+        
+        // ============ NOTIFICATION DROPDOWN ============
+        const notificationBell = document.getElementById('notificationBell');
+        const notificationDropdown = document.getElementById('notificationDropdown');
+        
+        if (notificationBell) {
+            notificationBell.addEventListener('click', function(e) {
+                e.stopPropagation();
+                notificationDropdown.classList.toggle('show');
+            });
+            
+            document.addEventListener('click', function(e) {
+                if (notificationBell && notificationDropdown && 
+                    !notificationBell.contains(e.target) && 
+                    !notificationDropdown.contains(e.target)) {
+                    notificationDropdown.classList.remove('show');
+                }
+            });
+        }
+        
+        // ============ DARK MODE FUNCTION ============
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        
+        function toggleDarkMode() {
+            const body = document.body;
+            
+            body.classList.toggle('dark-mode');
+            
+            if (body.classList.contains('dark-mode')) {
+                localStorage.setItem('officer_dark_mode', 'enabled');
+                if (darkModeToggle) darkModeToggle.checked = true;
+            } else {
+                localStorage.setItem('officer_dark_mode', 'disabled');
+                if (darkModeToggle) darkModeToggle.checked = false;
+            }
+        }
+        
+        document.querySelector('.theme-switch')?.addEventListener('click', (e) => {
+            if (e.target.closest('.switch')) return;
+            toggleDarkMode();
+        });
+        
+        if (darkModeToggle) {
+            darkModeToggle.addEventListener('change', (e) => {
+                e.stopPropagation();
+                toggleDarkMode();
+            });
+        }
+        
+        const darkModePref = localStorage.getItem('officer_dark_mode');
+        if (darkModePref === 'enabled') {
+            document.body.classList.add('dark-mode');
+            if (darkModeToggle) darkModeToggle.checked = true;
+        }
+        
+        document.querySelectorAll('.nav-link').forEach(link => {
+            if (link.href === window.location.href) {
+                link.classList.add('nav-active');
             }
         });
-    }
-    
-    // ============ REMOVE VERIFIED STUDENT ============
-    function removeVerified(id) {
-        Swal.fire({
-            title: 'Remove from Verified List?',
-            text: 'This student will no longer be automatically approved.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            confirmButtonText: 'Yes, remove!',
-            cancelButtonText: 'Cancel'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                Swal.fire({ title: 'Processing...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-                
-                fetch('/officer/verified/' + id, {
-                    method: 'DELETE',
-                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json', 'Accept': 'application/json' }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire({ icon: 'success', title: 'Removed!', text: data.message, timer: 1500, showConfirmButton: false })
-                            .then(() => location.reload());
-                    } else {
-                        Swal.fire({ icon: 'error', title: 'Error', text: data.message });
-                    }
-                })
-                .catch(() => Swal.fire({ icon: 'error', title: 'Network Error' }));
+        
+        window.addEventListener('load', function() {
+            if (document.body.scrollWidth > window.innerWidth) {
+                document.body.style.overflowX = 'hidden';
             }
         });
-    }
-    
-    // ============ SEARCH FUNCTIONS ============
-    document.getElementById('searchStudentInput')?.addEventListener('keyup', function() {
-        let term = this.value.toLowerCase();
-        let rows = document.querySelectorAll('#studentsTableBody tr');
-        rows.forEach(row => {
-            let text = row.textContent.toLowerCase();
-            row.style.display = text.includes(term) ? '' : 'none';
-        });
-    });
-    
-    document.getElementById('searchVerifiedInput')?.addEventListener('keyup', function() {
-        let term = this.value.toLowerCase();
-        let rows = document.querySelectorAll('#verifiedTableBody tr');
-        rows.forEach(row => {
-            let text = row.textContent.toLowerCase();
-            row.style.display = text.includes(term) ? '' : 'none';
-        });
-    });
-    
-    document.getElementById('mobileSearchInput')?.addEventListener('keyup', function() {
-        let term = this.value.toLowerCase();
-        let items = document.querySelectorAll('.student-mobile-item');
-        items.forEach(item => {
-            let text = item.getAttribute('data-name') + ' ' + item.getAttribute('data-student-id');
-            item.style.display = text.includes(term) ? '' : 'none';
-        });
-    });
-    
-    // Close panel on escape
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') closeStatsPanel();
-    });
-</script>
-@endsection
+        
+        // ============ AUTO-REFRESH NOTIFICATIONS ============
+        // Refresh notifications every 60 seconds
+        setInterval(function() {
+            if (notificationBell && notificationDropdown && !notificationDropdown.classList.contains('show')) {
+                // Only refresh if dropdown is not open to avoid flickering
+                // The badge count will update on next open
+            }
+        }, 60000);
+    </script>
+    @stack('scripts')
+</body>
+</html>

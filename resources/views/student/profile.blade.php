@@ -75,7 +75,7 @@
                            readonly disabled>
                     <input type="hidden" name="course" value="{{ $student->course }}">
                     <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                        <i class="fas fa-info-circle"></i> Course cannot be changed. Please contact admin if you need to update your course.
+                        <i class="fas fa-info-circle"></i> Course cannot be changed. Please contact assistance if you need to update your course.
                     </p>
                 </div>
                 
@@ -87,7 +87,7 @@
                            readonly disabled>
                     <input type="hidden" name="year_level" value="{{ $student->year_level }}">
                     <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                        <i class="fas fa-info-circle"></i> Year level cannot be changed. Please contact admin if you need to update your year level.
+                        <i class="fas fa-info-circle"></i> Year level cannot be changed. Please contact assistance if you need to update your year level.
                     </p>
                 </div>
                 

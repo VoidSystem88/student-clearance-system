@@ -20,6 +20,7 @@ class DepartmentManagementController extends Controller
     {
         $request->validate([
             'name' => 'required|string|unique:departments',
+            'handler_name' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'staff_email' => 'required|email|unique:departments',
             'password' => 'required|string|min:8',
@@ -27,6 +28,7 @@ class DepartmentManagementController extends Controller
         
         $department = Department::create([
             'name' => $request->name,
+            'handler_name' => $request->handler_name,
             'description' => $request->description,
             'staff_email' => $request->staff_email,
             'staff_password' => Hash::make($request->password),
@@ -57,12 +59,14 @@ class DepartmentManagementController extends Controller
         
         $request->validate([
             'name' => 'required|string|unique:departments,name,' . $id,
+            'handler_name' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'staff_email' => 'required|email|unique:departments,staff_email,' . $id,
         ]);
         
         $department->update([
             'name' => $request->name,
+            'handler_name' => $request->handler_name,
             'description' => $request->description,
             'staff_email' => $request->staff_email,
         ]);
@@ -119,5 +123,35 @@ class DepartmentManagementController extends Controller
         ]);
         
         return redirect()->route('admin.departments')->with('success', "Department {$status} successfully");
+    }
+
+    public function assignYearsToDepartment($id, Request $request)
+    {
+        $department = Department::findOrFail($id);
+        
+        $request->validate([
+            'years' => 'required|array',
+            'years.*' => 'in:1st Year,2nd Year,3rd Year,4th Year'
+        ]);
+        
+        \App\Models\DepartmentYearAssignment::where('department_id', $id)->delete();
+        
+        foreach ($request->years as $year) {
+            \App\Models\DepartmentYearAssignment::create([
+                'department_id' => $id,
+                'year_level' => $year
+            ]);
+        }
+        
+        ActivityLog::create([
+            'user_id' => auth()->id(),
+            'user_email' => auth()->user()->email ?? 'admin',
+            'action' => 'updated',
+            'module' => 'Department',
+            'description' => 'Updated year assignments for department: ' . $department->name,
+            'ip_address' => request()->ip(),
+        ]);
+        
+        return redirect()->route('admin.departments')->with('success', 'Year levels assigned successfully!');
     }
 }

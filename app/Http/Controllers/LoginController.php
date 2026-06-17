@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Department;
 use App\Helpers\ActivityLogHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -24,9 +25,66 @@ class LoginController extends Controller
             'password' => 'required|string',
         ]);
 
-        $field = filter_var($request->username, FILTER_VALIDATE_EMAIL) ? 'email' : 'student_id';
-        $user = User::where($field, $request->username)->first();
+        // ============ CHECK IF EMAIL (STAFF/ADMIN/SUPPORT) ============
+        if (filter_var($request->username, FILTER_VALIDATE_EMAIL)) {
+            // Hanapin muna sa users table (admin, support)
+            $user = User::where('email', $request->username)->first();
+            
+            // Kung wala sa users, hanapin sa departments table (staff)
+            if (!$user) {
+                $staff = Department::where('staff_email', $request->username)->first();
+                
+                if ($staff && Hash::check($request->password, $staff->staff_password)) {
+                    // ✅ GUMAWA NG FAKE USER OBJECT PARA SA STAFF
+                    $user = new User();
+                    $user->id = $staff->id;
+                    $user->name = $staff->name;
+                    $user->email = $staff->staff_email;
+                    $user->role = 'staff';
+                    $user->department_id = $staff->id;
+                    $user->is_active = true;
+                    
+                    // ✅ I-SAVE SA SESSION
+                    session([
+                        'staff_logged_in' => true,
+                        'staff_id' => $staff->id,
+                        'staff_name' => $staff->name,
+                        'staff_email' => $staff->staff_email,
+                        'staff_department_id' => $staff->id,
+                    ]);
+                    
+                    // ✅ I-LOGIN GAMIT ANG AUTH
+                    Auth::login($user);
+                    $request->session()->regenerate();
+                    
+                    return response()->json([
+                        'success' => true,
+                        'role' => 'staff',
+                        'redirect' => route('staff.dashboard'),
+                        'message' => 'Login successful!'
+                    ]);
+                }
+            }
+        } else {
+            // ============ STUDENT LOGIN (STRICT: STUDENT ID ONLY) ============
+            if (!preg_match('/^\d{4}-\d{5}$/', $request->username)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid Student ID format. Use: YYYY-XXXXX'
+                ], 422);
+            }
+            
+            $user = User::where('student_id', $request->username)->first();
+            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Student ID not found'
+                ], 401);
+            }
+        }
 
+        // ============ NORMAL USER LOGIN (Admin/Support/Student) ============
         if ($user && Hash::check($request->password, $user->password)) {
             
             // ============ EMAIL VERIFICATION CHECK (STUDENT ONLY) ============
@@ -34,37 +92,31 @@ class LoginController extends Controller
                 session(['pending_verification_student_id' => $user->id]);
                 $user->sendEmailVerificationNotification();
                 
-                if ($request->ajax()) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Please verify your email first. A new verification code has been sent.',
-                        'needs_verification' => true,
-                        'redirect' => route('verification.notice')
-                    ], 401);
-                }
-                return back()->with('error', 'Please verify your email before logging in.');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please verify your email first. A new verification code has been sent.',
+                    'needs_verification' => true,
+                    'redirect' => route('verification.notice')
+                ], 401);
             }
             
             // ============ ACCOUNT ACTIVE CHECK ============
             if ($user->role === 'student' && !$user->is_active) {
-                if ($request->ajax()) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Your account is deactivated. Please contact support.'
-                    ], 401);
-                }
-                return back()->with('error', 'Your account is deactivated. Please contact support.');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Your account is deactivated. Please contact support.'
+                ], 401);
             }
             
             // ============ 2FA CHECK FOR ADMIN AND SUPPORT ============
-            if (in_array($user->role, ['admin', 'super_admin', 'support']) && $user->admin_2fa_enabled) {
+            if (in_array($user->role, ['admin', 'support']) && $user->admin_2fa_enabled) {
                 $code = rand(100000, 999999);
                 
                 $user->admin_2fa_code = $code;
                 $user->admin_2fa_expires_at = now()->addMinutes(5);
                 $user->save();
                 
-                $roleName = $user->role === 'support' ? 'Support' : ($user->role === 'super_admin' ? 'Super Admin' : 'Admin');
+                $roleName = $user->role === 'support' ? 'Support' : 'Admin';
                 
                 try {
                     Mail::send([], [], function($message) use ($user, $code, $roleName) {
@@ -100,23 +152,18 @@ class LoginController extends Controller
                 
                 $redirectRoute = $user->role === 'support' ? route('support.2fa.verify') : route('admin.2fa.verify');
                 
-                if ($request->ajax()) {
-                    return response()->json([
-                        'success' => true,
-                        'requires_2fa' => true,
-                        'redirect' => $redirectRoute,
-                        'message' => '2FA verification required. Code sent to your email.'
-                    ]);
-                }
-                
-                return redirect($redirectRoute)->with('info', 'Verification code sent to your email.');
+                return response()->json([
+                    'success' => true,
+                    'requires_2fa' => true,
+                    'redirect' => $redirectRoute,
+                    'message' => '2FA verification required. Code sent to your email.'
+                ]);
             }
             
-            // ============ DIRECT LOGIN (NO 2FA) ============
+            // ============ DIRECT LOGIN ============
             Auth::login($user, $request->boolean('remember'));
             $request->session()->regenerate();
             
-            // Determine redirect URL based on role
             $redirectUrl = '/';
             if (in_array($user->role, ['admin', 'super_admin'])) {
                 $redirectUrl = route('admin.dashboard');
@@ -130,31 +177,26 @@ class LoginController extends Controller
                 $redirectUrl = route('student.dashboard');
             }
             
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => true,
-                    'role' => $user->role,
-                    'redirect' => $redirectUrl,
-                    'message' => 'Login successful!',
-                    'auto_login' => $request->input('auto_login', false),
-                ]);
-            }
-            
-            return redirect($redirectUrl);
-        }
-
-        if ($request->ajax()) {
             return response()->json([
-                'success' => false,
-                'message' => 'Invalid email/student ID or password'
-            ], 401);
+                'success' => true,
+                'role' => $user->role,
+                'redirect' => $redirectUrl,
+                'message' => 'Login successful!',
+                'auto_login' => $request->input('auto_login', false),
+            ]);
         }
 
-        return back()->with('error', 'Invalid credentials');
+        // ============ LOGIN FAILED ============
+        return response()->json([
+            'success' => false,
+            'message' => 'Invalid credentials'
+        ], 401);
     }
 
     public function logout(Request $request)
     {
+        session()->forget(['staff_logged_in', 'staff_id', 'staff_name', 'staff_email', 'staff_department_id']);
+        
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

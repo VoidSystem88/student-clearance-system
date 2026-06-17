@@ -240,16 +240,16 @@ class SupportController extends Controller
     }
     
     public function studentsPage()
-{
-    $students = User::where('role', 'student')->orderBy('created_at', 'desc')->get();
-    
-    // ✅ Kunin ang lahat ng active courses para sa dropdown
-    $courses = \App\Models\Course::where('is_active', true)
-        ->orderBy('code')
-        ->get();
-    
-    return view('support.students', compact('students', 'courses'));
-}
+    {
+        $students = User::where('role', 'student')->orderBy('created_at', 'desc')->get();
+        
+        // Kunin ang lahat ng active courses para sa dropdown
+        $courses = \App\Models\Course::where('is_active', true)
+            ->orderBy('code')
+            ->get();
+        
+        return view('support.students', compact('students', 'courses'));
+    }
     
     public function feedbacksPage()
     {
@@ -358,25 +358,25 @@ class SupportController extends Controller
     }
     
     public function editStudent($id)
-{
-    $student = User::where('id', $id)->where('role', 'student')->firstOrFail();
-    
-    // Kunin ang mga active courses para sa dropdown
-    $courses = \App\Models\Course::where('is_active', true)
-        ->orderBy('code')
-        ->get();
-    
-    return response()->json([
-        'id' => $student->id,
-        'first_name' => $student->first_name,
-        'last_name' => $student->last_name,
-        'email' => $student->email,
-        'course' => $student->course,
-        'year_level' => $student->year_level,
-        'course_year' => $student->course_year ?? ($student->course . ' - ' . $student->year_level),
-        'courses' => $courses,  // ✅ IDAGDAG ITO
-    ]);
-}
+    {
+        $student = User::where('id', $id)->where('role', 'student')->firstOrFail();
+        
+        // Kunin ang mga active courses para sa dropdown
+        $courses = \App\Models\Course::where('is_active', true)
+            ->orderBy('code')
+            ->get();
+        
+        return response()->json([
+            'id' => $student->id,
+            'first_name' => $student->first_name,
+            'last_name' => $student->last_name,
+            'email' => $student->email,
+            'course' => $student->course,
+            'year_level' => $student->year_level,
+            'course_year' => $student->course_year ?? ($student->course . ' - ' . $student->year_level),
+            'courses' => $courses,
+        ]);
+    }
     
     public function updateStudent(Request $request, $id)
     {
@@ -421,7 +421,7 @@ class SupportController extends Controller
         ]);
         
         $supportRequest = SupportRequest::findOrFail($id);
-        $oldStatus = $supportRequest->status; // ✅ I-define muna ang oldStatus
+        $oldStatus = $supportRequest->status;
         
         $supportRequest->update([
             'status' => $request->status,
@@ -432,7 +432,6 @@ class SupportController extends Controller
         // ============ SEND EMAIL TO STUDENT ============
         if ($oldStatus != $request->status) {
             try {
-                // Check if email template exists, if not use fallback
                 $viewExists = view()->exists('emails.assistance-response');
                 
                 if ($viewExists) {
@@ -451,7 +450,6 @@ class SupportController extends Controller
                                 ->subject($subject . ' - Void Clearance System');
                     });
                 } else {
-                    // Fallback email
                     Mail::raw("Your assistance request (#{$supportRequest->id}) status has been updated to: {$request->status}\n\nAdmin notes: " . ($request->admin_notes ?? 'None'), function($message) use ($supportRequest) {
                         $message->to($supportRequest->student->email)
                                 ->subject('Assistance Request Update - Void Clearance System');
@@ -522,7 +520,6 @@ class SupportController extends Controller
         
         // ============ SEND EMAIL TO STUDENT ============
         try {
-            // Check if email template exists
             $viewExists = view()->exists('emails.feedback-response');
             
             if ($viewExists && $feedback->user) {
@@ -535,7 +532,6 @@ class SupportController extends Controller
                             ->subject('📝 Feedback Response - Void Clearance System');
                 });
             } else {
-                // Fallback email
                 Mail::raw("Your feedback has been reviewed.\n\nAdmin Response: " . $request->admin_response . "\n\nThank you for helping us improve the system.", function($message) use ($feedback) {
                     $message->to($feedback->user->email)
                             ->subject('Feedback Response - Void Clearance System');
@@ -825,56 +821,284 @@ class SupportController extends Controller
             }
         }
     }
+    
     public function bulkYearUpdate(Request $request)
-{
-    $request->validate([
-        'selection_type' => 'required|in:all,by_course,selected',
-        'from_year' => 'required|string',
-        'to_year' => 'required|string',
-        'course' => 'nullable|string',
-        'student_ids' => 'nullable|array',
-    ]);
-    
-    $query = User::where('role', 'student')
-        ->where('year_level', $request->from_year);
-    
-    if ($request->selection_type === 'by_course' && $request->course) {
-        $query->where('course', $request->course);
-    }
-    
-    if ($request->selection_type === 'selected' && $request->student_ids) {
-        $query->whereIn('id', $request->student_ids);
-    }
-    
-    $students = $query->get();
-    $count = $students->count();
-    
-    if ($count === 0) {
-        return redirect()->back()->with('error', 'No students found to update.');
-    }
-    
-    foreach ($students as $student) {
-        $student->update([
-            'year_level' => $request->to_year,
-            'course_year' => $student->course . ' - ' . $request->to_year,
+    {
+        $request->validate([
+            'selection_type' => 'required|in:all,by_course,selected',
+            'from_year' => 'required|string',
+            'to_year' => 'required|string',
+            'course' => 'nullable|string',
+            'student_ids' => 'nullable|array',
         ]);
         
-        // Kung nag-graduate na, i-reset ang clearance status para fresh start
-        if ($request->to_year === 'Graduated') {
-            $student->update(['is_cleared' => false]);
-            \App\Models\ClearanceRequest::where('student_id', $student->id)->delete();
+        $query = User::where('role', 'student')
+            ->where('year_level', $request->from_year);
+        
+        if ($request->selection_type === 'by_course' && $request->course) {
+            $query->where('course', $request->course);
         }
+        
+        if ($request->selection_type === 'selected' && $request->student_ids) {
+            $query->whereIn('id', $request->student_ids);
+        }
+        
+        $students = $query->get();
+        $count = $students->count();
+        
+        if ($count === 0) {
+            return redirect()->back()->with('error', 'No students found to update.');
+        }
+        
+        foreach ($students as $student) {
+            $student->update([
+                'year_level' => $request->to_year,
+                'course_year' => $student->course . ' - ' . $request->to_year,
+            ]);
+            
+            // Kung nag-graduate na, i-reset ang clearance status para fresh start
+            if ($request->to_year === 'Graduated') {
+                $student->update(['is_cleared' => false]);
+                \App\Models\ClearanceRequest::where('student_id', $student->id)->delete();
+            }
+        }
+        
+        \App\Models\ActivityLog::create([
+            'user_id' => auth()->id(),
+            'user_email' => auth()->user()->email,
+            'action' => 'bulk_year_update',
+            'module' => 'Student',
+            'description' => "Updated {$count} students from {$request->from_year} to {$request->to_year}",
+            'ip_address' => request()->ip(),
+        ]);
+        
+        return redirect()->route('support.students')->with('success', "✅ {$count} students updated from {$request->from_year} to {$request->to_year}");
     }
-    
-    \App\Models\ActivityLog::create([
-        'user_id' => auth()->id(),
-        'user_email' => auth()->user()->email,
-        'action' => 'bulk_year_update',
-        'module' => 'Student',
-        'description' => "Updated {$count} students from {$request->from_year} to {$request->to_year}",
-        'ip_address' => request()->ip(),
-    ]);
-    
-    return redirect()->route('support.students')->with('success', "✅ {$count} students updated from {$request->from_year} to {$request->to_year}");
-}
+
+    // ============ NOTIFICATION METHODS ============
+
+    public function notifications()
+    {
+        $bugReports = BugReport::where('status', 'pending')->orderBy('created_at', 'desc')->get();
+        $supportRequests = SupportRequest::where('status', 'pending')->orderBy('created_at', 'desc')->get();
+        $feedbacks = Feedback::where('status', 'pending')->orderBy('created_at', 'desc')->get();
+        
+        return view('support.notifications', compact('bugReports', 'supportRequests', 'feedbacks'));
+    }
+
+    public function getNotificationCounts()
+    {
+        $bugReportsCount = BugReport::where('status', 'pending')->count();
+        $supportRequestsCount = SupportRequest::where('status', 'pending')->count();
+        $feedbacksCount = Feedback::where('status', 'pending')->count();
+        
+        $total = $bugReportsCount + $supportRequestsCount + $feedbacksCount;
+        
+        // Get recent items for dropdown
+        $recentBugReports = BugReport::where('status', 'pending')
+            ->orderBy('created_at', 'desc')
+            ->limit(3)
+            ->get()
+            ->map(function($item) {
+                return [
+                    'id' => $item->id,
+                    'type' => 'bug_report',
+                    'title' => '🐛 Bug Report',
+                    'message' => ($item->name ?? 'Anonymous') . ' reported: ' . ucfirst(str_replace('_', ' ', $item->type)),
+                    'created_at' => $item->created_at,
+                    'link' => route('support.dashboard') . '#bug-reports',
+                    'icon' => 'fa-bug',
+                    'color' => 'red',
+                    'status' => $item->status
+                ];
+            });
+        
+        $recentRequests = SupportRequest::where('status', 'pending')
+            ->orderBy('created_at', 'desc')
+            ->limit(3)
+            ->get()
+            ->map(function($item) {
+                return [
+                    'id' => $item->id,
+                    'type' => 'support_request',
+                    'title' => '🎫 Support Request',
+                    'message' => ($item->student->first_name ?? 'Student') . ' needs assistance: ' . ucfirst(str_replace('_', ' ', $item->request_type)),
+                    'created_at' => $item->created_at,
+                    'link' => route('support.requests'),
+                    'icon' => 'fa-ticket-alt',
+                    'color' => 'blue',
+                    'status' => $item->status
+                ];
+            });
+        
+        $recentFeedbacks = Feedback::where('status', 'pending')
+            ->orderBy('created_at', 'desc')
+            ->limit(3)
+            ->get()
+            ->map(function($item) {
+                return [
+                    'id' => $item->id,
+                    'type' => 'feedback',
+                    'title' => '⭐ New Feedback',
+                    'message' => ($item->user->first_name ?? 'Student') . ' gave ' . $item->rating . '⭐ feedback',
+                    'created_at' => $item->created_at,
+                    'link' => route('support.feedbacks'),
+                    'icon' => 'fa-star',
+                    'color' => 'purple',
+                    'status' => $item->status
+                ];
+            });
+        
+        // Combine and sort by date
+        $recentItems = collect()
+            ->concat($recentBugReports)
+            ->concat($recentRequests)
+            ->concat($recentFeedbacks)
+            ->sortByDesc('created_at')
+            ->values()
+            ->take(10);
+        
+        return response()->json([
+            'success' => true,
+            'total' => $total,
+            'bug_reports' => $bugReportsCount,
+            'support_requests' => $supportRequestsCount,
+            'feedbacks' => $feedbacksCount,
+            'recent_items' => $recentItems
+        ]);
+    }
+
+    public function markAllNotificationsAsRead()
+    {
+        // Store timestamp when all notifications were viewed
+        session(['support_all_notifications_viewed_at' => now()]);
+        
+        return response()->json(['success' => true]);
+    }
+        // ============ REMINDERS METHODS ============
+
+    public function reminders()
+    {
+        $reminders = \App\Models\Reminder::with('creator', 'department')
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
+        
+        $departments = \App\Models\Department::where('is_active', true)->get();
+        
+        return view('support.reminders', compact('reminders', 'departments'));
+    }
+
+    public function storeReminder(Request $request)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'message' => 'required|string',
+            'target_role' => 'required|in:staff,officer,both',
+            'department_id' => 'nullable|exists:departments,id',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'is_active' => 'sometimes|boolean',
+        ]);
+
+        $reminder = \App\Models\Reminder::create([
+            'title' => $request->title,
+            'message' => $request->message,
+            'target_role' => $request->target_role,
+            'department_id' => $request->department_id,
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
+            'is_active' => $request->has('is_active') ? $request->is_active : true,
+            'created_by' => auth()->id(),
+        ]);
+
+        \App\Models\ActivityLog::create([
+            'user_id' => auth()->id(),
+            'user_email' => auth()->user()->email,
+            'action' => 'created',
+            'module' => 'Reminder',
+            'description' => "Created reminder: {$reminder->title}",
+            'ip_address' => request()->ip(),
+        ]);
+
+        return redirect()->route('support.reminders')->with('success', 'Reminder created successfully!');
+    }
+
+    public function editReminder($id)
+    {
+        $reminder = \App\Models\Reminder::findOrFail($id);
+        return response()->json($reminder);
+    }
+
+    public function updateReminder(Request $request, $id)
+    {
+        $reminder = \App\Models\Reminder::findOrFail($id);
+        
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'message' => 'required|string',
+            'target_role' => 'required|in:staff,officer,both',
+            'department_id' => 'nullable|exists:departments,id',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'is_active' => 'sometimes|boolean',
+        ]);
+
+        $reminder->update([
+            'title' => $request->title,
+            'message' => $request->message,
+            'target_role' => $request->target_role,
+            'department_id' => $request->department_id,
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
+            'is_active' => $request->has('is_active') ? $request->is_active : $reminder->is_active,
+        ]);
+
+        \App\Models\ActivityLog::create([
+            'user_id' => auth()->id(),
+            'user_email' => auth()->user()->email,
+            'action' => 'updated',
+            'module' => 'Reminder',
+            'description' => "Updated reminder: {$reminder->title}",
+            'ip_address' => request()->ip(),
+        ]);
+
+        return redirect()->route('support.reminders')->with('success', 'Reminder updated successfully!');
+    }
+
+    public function destroyReminder($id)
+    {
+        $reminder = \App\Models\Reminder::findOrFail($id);
+        $title = $reminder->title;
+        $reminder->delete();
+
+        \App\Models\ActivityLog::create([
+            'user_id' => auth()->id(),
+            'user_email' => auth()->user()->email,
+            'action' => 'deleted',
+            'module' => 'Reminder',
+            'description' => "Deleted reminder: {$title}",
+            'ip_address' => request()->ip(),
+        ]);
+
+        return redirect()->route('support.reminders')->with('success', 'Reminder deleted successfully!');
+    }
+
+    public function toggleReminder($id)
+    {
+        $reminder = \App\Models\Reminder::findOrFail($id);
+        $reminder->update(['is_active' => !$reminder->is_active]);
+        
+        $status = $reminder->is_active ? 'activated' : 'deactivated';
+        
+        \App\Models\ActivityLog::create([
+            'user_id' => auth()->id(),
+            'user_email' => auth()->user()->email,
+            'action' => 'updated',
+            'module' => 'Reminder',
+            'description' => "{$status} reminder: {$reminder->title}",
+            'ip_address' => request()->ip(),
+        ]);
+        
+        return redirect()->route('support.reminders')->with('success', "Reminder {$status} successfully!");
+    }
 }
