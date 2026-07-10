@@ -1,0 +1,33 @@
+<?php
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\StudentController;
+use App\Http\Controllers\Api\ClearanceController;
+use App\Http\Controllers\Api\AnnouncementController;
+
+// Public API routes (no authentication)
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+
+// Test route
+Route::get('/test', function() {
+    return response()->json(['message' => 'API is working']);
+});
+
+// Protected API routes (require authentication)
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/user', [AuthController::class, 'user']);
+    Route::get('/dashboard', [StudentController::class, 'dashboard']);
+    Route::get('/departments', [StudentController::class, 'departments']);
+    Route::get('/clearance-status', [StudentController::class, 'clearanceStatus']);
+    Route::post('/clearance/submit', [ClearanceController::class, 'submit']);
+    Route::get('/clearance/history', [ClearanceController::class, 'history']);
+    Route::get('/clearance/print', [ClearanceController::class, 'printSlip']);
+    Route::get('/announcements', [AnnouncementController::class, 'index']);
+});

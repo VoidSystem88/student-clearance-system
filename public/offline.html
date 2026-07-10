@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Offline - Clearance System</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 50px; background: #1a1a2e; color: white; }
+        .icon { font-size: 80px; margin-bottom: 20px; }
+        h1 { font-size: 24px; }
+        p { color: #aaa; }
+    </style>
+</head>
+<body>
+    <div class="icon">📡</div>
+    <h1>You're Offline</h1>
+    <p>Please check your internet connection and try again.</p>
+    <p style="margin-top: 30px;">The page will reload automatically when you're back online.</p>
+    <script>
+        window.addEventListener('online', () => location.reload());
+    </script>
+</body>
+</html>
